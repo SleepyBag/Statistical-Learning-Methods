@@ -3,7 +3,7 @@ from matplotlib import pyplot as plt
 from rich.console import Console
 from rich.table import Table
 import sys
-sys.path.append('..')
+sys.path.append(str(Path(os.path.abspath(__file__)).parent.parent))
 from utils import *
 
 class Perceptron:
