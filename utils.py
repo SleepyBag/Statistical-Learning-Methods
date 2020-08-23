@@ -2,6 +2,8 @@ from matplotlib import pyplot as plt
 import numpy as np
 import heapq
 from math import inf
+from math import log
+from collections import Counter
 
 def kbline(k, b, **args):
     """Plot a line from slope and intercept"""
@@ -55,3 +57,39 @@ class Heap:
 
     def pop(self):
         return heapq.heappop(self.h)[-1]
+
+def argmax(arr, key=lambda x: x):
+    arr = [key(a) for a in arr]
+    ans = max(arr)
+    return arr.index(ans), ans
+
+def argmin(arr, key=lambda x: x):
+    arr = [key(a) for a in arr]
+    ans = min(arr)
+    return arr.index(ans), ans
+
+def entropy(p):
+    s = sum(p)
+    p = [i / s for i in p]
+    ans = sum(-i * log(i) for i in p)
+    return ans
+
+def entropy_of_split(X, Y, col):
+    """calculate the conditional entropy of splitting data by col"""
+    val_cnt = Counter(x[col] for x in X)
+    ans = 0
+    for val in val_cnt:
+        weight = val_cnt[val] / len(X)
+        entr = entropy(Counter(y for x, y in zip(X, Y) if x[col] == val).values())
+        ans += weight * entr
+    return ans
+
+def information_gain(X, Y, col):
+    entropy_of_X = entropy(Counter(Y).values())
+    entropy_of_col = entropy_of_split(X, Y, col)
+    return entropy_of_X - entropy_of_col
+
+def information_gain_ratio(X, Y, col):
+    information_gain_of_col = information_gain(X, Y, col)
+    entropy_of_col = entropy(Counter(x[col] for x in X).values())
+    return information_gain_of_col / entropy_of_col

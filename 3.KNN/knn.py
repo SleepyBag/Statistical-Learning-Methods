@@ -5,7 +5,9 @@ from rich.console import Console
 from rich.table import Table
 from functools import partial
 import sys
-sys.path.append('..')
+import os
+from pathlib import Path
+sys.path.append(str(Path(os.path.abspath(__file__)).parent.parent))
 from utils import *
 
 class KNN:
