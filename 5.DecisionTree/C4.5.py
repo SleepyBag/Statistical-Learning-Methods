@@ -1,5 +1,4 @@
 import numpy as np
-import numpy as np
 from pprint import pprint
 from rich.console import Console
 from rich.table import Table
@@ -58,7 +57,7 @@ class ID3:
         if root.col is None or x[root.col] not in root.children:
             return root.label
         return self.query(root.children[x[root.col]], x)
-    
+
     def fit(self, X, Y):
         self.column_cnt = len(X[0])
         self.root = self.build(X, Y, set())
