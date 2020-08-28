@@ -1,14 +1,13 @@
-import numpy as np
 from pprint import pprint
 from rich.console import Console
 from rich.table import Table
-from math import log
 from collections import Counter
 import sys
 import os
 from pathlib import Path
 sys.path.append(str(Path(os.path.abspath(__file__)).parent.parent))
-from utils import *
+from utils import argmax, information_gain
+
 
 class ID3:
     class Node:
@@ -19,7 +18,8 @@ class ID3:
             s = sum(self.prob.values())
             for y in self.prob:
                 self.prob[y] /= s
-            label_ind, self.label_prob = argmax(self.prob.keys(), key=self.prob.__getitem__)
+            label_ind, self.label_prob = argmax(self.prob.keys(),
+                                                key=self.prob.__getitem__)
             self.label = Y[label_ind]
 
     def __init__(self, information_gain_threshold=0., verbose=False):
@@ -34,10 +34,12 @@ class ID3:
             pprint(X)
             print(Y)
         split = False
-        # check if there is no attribute to choose, or there is no need for spilt
+        # check if there is no attribute to choose
+        # or there is no need for spilt
         if len(selected) != self.column_cnt and len(set(Y)) > 1:
             left_columns = list(set(range(self.column_cnt)) - selected)
-            col_ind, best_information_gain = argmax(left_columns, key=lambda col: information_gain(X, Y, col))
+            col_ind, best_information_gain = argmax(left_columns,
+                                                    key=lambda col: information_gain(X, Y, col))
             col = left_columns[col_ind]
             # if this split is better than not splitting
             if best_information_gain >= self.information_gain_threshold:
@@ -57,7 +59,7 @@ class ID3:
         if root.col is None or x[root.col] not in root.children:
             return root.label
         return self.query(root.children[x[root.col]], x)
-    
+
     def fit(self, X, Y):
         self.column_cnt = len(X[0])
         self.root = self.build(X, Y, set())
@@ -67,6 +69,7 @@ class ID3:
 
     def predict(self, X):
         return [self._predict(x) for x in X]
+
 
 if __name__ == "__main__":
     console = Console(markup=False)

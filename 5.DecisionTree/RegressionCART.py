@@ -9,6 +9,7 @@ from pathlib import Path
 sys.path.append(str(Path(os.path.abspath(__file__)).parent.parent))
 from utils import *
 
+
 class RegressionCART:
     class Node:
         def __init__(self, col, Y):
