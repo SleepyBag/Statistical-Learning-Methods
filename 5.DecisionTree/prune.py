@@ -38,6 +38,7 @@ def prune(root, X, Y, alpha=.0, verbose=True):
     # if not pruned, the loss of node root is the sum loss of all of its children
     return cur_loss
 
+
 if __name__ == "__main__":
     console = Console(markup=False)
     # -------------------------- Example 1 (Small Normalization Param) ------------
