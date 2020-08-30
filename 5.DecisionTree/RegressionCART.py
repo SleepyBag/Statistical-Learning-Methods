@@ -69,7 +69,7 @@ class RegressionCART:
             cur.val = best_val
             cur.left = self.build(smaller_X, smaller_Y)
             cur.right = self.build(larger_X, larger_Y)
-        else:
+        elif self.verbose:
             print("No split")
         return cur
 
