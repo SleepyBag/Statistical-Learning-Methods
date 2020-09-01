@@ -10,7 +10,7 @@ from pathlib import Path
 sys.path.append(str(Path(os.path.abspath(__file__)).parent.parent))
 from utils import *
 
-class ID3:
+class C45:
     class Node:
         def __init__(self, col, Y):
             self.col = col
@@ -70,8 +70,9 @@ class ID3:
 
 if __name__ == "__main__":
     console = Console(markup=False)
-    id3 = ID3(verbose=True)
+    c45 = C45(verbose=True)
     # -------------------------- Example 1 ----------------------------------------
+    # unpruned decision tree predict correctly for all training data
     print("Example 1:")
     X = [
         ['青年', '否', '否', '一般'],
@@ -91,11 +92,57 @@ if __name__ == "__main__":
         ['老年', '否', '否', '一般'],
     ]
     Y = ['否', '否', '是', '是', '否', '否', '否', '是', '是', '是', '是', '是', '是', '是', '否']
-    id3.fit(X, Y)
+    c45.fit(X, Y)
 
     # show in table
-    pred = id3.predict(X)
+    pred = c45.predict(X)
     table = Table('x', 'y', 'pred')
     for x, y, y_hat in zip(X, Y, pred):
+        table.add_row(*map(str, [x, y, y_hat]))
+    console.print(table)
+
+    # -------------------------- Example 2 ----------------------------------------
+    # but unpruned decision tree doesn't generalize well for test data
+    print("Example 2:")
+    X = [
+        ['青年', '否', '否', '一般'],
+        ['青年', '否', '否', '好'],
+        ['青年', '是', '是', '一般'],
+        ['青年', '否', '否', '一般'],
+        ['老年', '否', '否', '一般'],
+        ['老年', '否', '否', '好'],
+        ['老年', '是', '是', '好'],
+        ['老年', '否', '是', '非常好'],
+        ['老年', '否', '是', '非常好'],
+        ['老年', '否', '是', '非常好'],
+        ['老年', '否', '是', '好'],
+        ['老年', '否', '否', '一般'],
+    ]
+    Y = ['否', '否', '是', '否', '否', '否', '是', '是', '是', '是', '是', '否']
+    c45.fit(X, Y)
+
+    testX = [
+        ['青年', '否', '否', '一般'],
+        ['青年', '否', '否', '好'],
+        ['青年', '是', '否', '好'],
+        ['青年', '是', '是', '一般'],
+        ['青年', '否', '否', '一般'],
+        ['老年', '否', '否', '一般'],
+        ['老年', '否', '否', '好'],
+        ['老年', '是', '是', '好'],
+        ['老年', '否', '是', '非常好'],
+        ['老年', '否', '是', '非常好'],
+        ['老年', '否', '是', '非常好'],
+        ['老年', '否', '是', '好'],
+        ['老年', '是', '否', '好'],
+        ['老年', '是', '否', '非常好'],
+        ['老年', '否', '否', '一般'],
+    ]
+    testY = ['否', '否', '是', '是', '否', '否', '否', '是', '是', '是', '是', '是', '是', '是', '否']
+
+    # show in table
+    pred = c45.predict(testX)
+    table = Table('x', 'y', 'pred')
+    for x, y, y_hat in zip(testX, testY, pred):
         table.add_row(*map(str, [x, y, y_hat]))
     console.print(table)

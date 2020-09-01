@@ -8,7 +8,7 @@ import sys
 import os
 from pathlib import Path
 sys.path.append(str(Path(os.path.abspath(__file__)).parent.parent))
-from utils import *
+from utils import gini
 
 class ClassificationCART:
     class Node:
@@ -21,19 +21,12 @@ class ClassificationCART:
     def __init__(self, verbose=False):
         self.verbose = verbose
 
-    def get_gini(self, Y):
-        cnt = Counter(Y)
-        ans = 0.
-        for y in Y:
-            ans += (cnt[y] / len(Y)) ** 2
-        return 1 - ans
-
     def get_gini_of_split(self, Y1, Y2):
         """get the square error of a split"""
         # Assume that we assign each a certain label to the two set,
         # the best assignment is the mean value of each set
-        gini1 = self.get_gini(Y1)
-        gini2 = self.get_gini(Y2)
+        gini1 = gini(Y1)
+        gini2 = gini(Y2)
         length = len(Y1) + len(Y2)
         return len(Y1) / length * gini1 + len(Y2) / length * gini2
 
@@ -59,9 +52,9 @@ class ClassificationCART:
                         other_ind = X[:, col] != val
                         selected_Y = Y[selected_ind]
                         other_Y = Y[other_ind]
-                        gini = self.get_gini_of_split(selected_Y, other_Y)
-                        if gini < best_gini:
-                            best_gini, best_col, best_val = gini, col, val
+                        cur_gini = self.get_gini_of_split(selected_Y, other_Y)
+                        if cur_gini < best_gini:
+                            best_gini, best_col, best_val = cur_gini, col, val
 
             # Build left and right child nodes recursively
             print(f"Split by value {best_val} of {best_col}th column")
@@ -125,5 +118,51 @@ if __name__ == "__main__":
     pred = cart.predict(X)
     table = Table('x', 'y', 'pred')
     for x, y, y_hat in zip(X, Y, pred):
+        table.add_row(*map(str, [x, y, y_hat]))
+    console.print(table)
+
+    # -------------------------- Example 2 ----------------------------------------
+    # but unpruned decision tree doesn't generalize well for test data
+    print("Example 2:")
+    X = np.array([
+        ['青年', '否', '否', '一般'],
+        ['青年', '否', '否', '好'],
+        ['青年', '是', '是', '一般'],
+        ['青年', '否', '否', '一般'],
+        ['老年', '否', '否', '一般'],
+        ['老年', '否', '否', '好'],
+        ['老年', '是', '是', '好'],
+        ['老年', '否', '是', '非常好'],
+        ['老年', '否', '是', '非常好'],
+        ['老年', '否', '是', '非常好'],
+        ['老年', '否', '是', '好'],
+        ['老年', '否', '否', '一般'],
+    ])
+    Y = np.array(['否', '否', '是', '否', '否', '否', '是', '是', '是', '是', '是', '否'])
+    cart.fit(X, Y)
+
+    testX = np.array([
+        ['青年', '否', '否', '一般'],
+        ['青年', '否', '否', '好'],
+        ['青年', '是', '否', '好'],
+        ['青年', '是', '是', '一般'],
+        ['青年', '否', '否', '一般'],
+        ['老年', '否', '否', '一般'],
+        ['老年', '否', '否', '好'],
+        ['老年', '是', '是', '好'],
+        ['老年', '否', '是', '非常好'],
+        ['老年', '否', '是', '非常好'],
+        ['老年', '否', '是', '非常好'],
+        ['老年', '否', '是', '好'],
+        ['老年', '是', '否', '好'],
+        ['老年', '是', '否', '非常好'],
+        ['老年', '否', '否', '一般'],
+    ])
+    testY = np.array(['否', '否', '是', '是', '否', '否', '否', '是', '是', '是', '是', '是', '是', '是', '否'])
+
+    # show in table
+    pred = cart.predict(testX)
+    table = Table('x', 'y', 'pred')
+    for x, y, y_hat in zip(testX, testY, pred):
         table.add_row(*map(str, [x, y, y_hat]))
     console.print(table)

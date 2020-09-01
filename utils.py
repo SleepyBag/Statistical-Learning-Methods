@@ -5,24 +5,6 @@ from math import inf, nan
 from math import log
 from collections import Counter
 
-def kbline(k, b, **args):
-    """Plot a line from slope and intercept"""
-    axes = plt.gca()
-    x_vals = np.array(axes.get_xlim())
-    y_vals = b + k * x_vals
-    plt.plot(x_vals, y_vals, **args)
-
-def wbline(w, b, **args):
-    k = -w[0] / w[1]
-    b /= -w[1]
-    if np.isinf(k):
-        plt.vlines(b / w1, plt.gca().get_ylim(), **args)
-    else:
-        kbline(k, b, **args)
-
-def euc_dis(a, b):
-    return np.linalg.norm(a - b)
-
 class Heap:
     def __init__(self, arr=None, key=lambda x: x, max_len=inf):
         self.key = key
@@ -68,6 +50,7 @@ def argmin(arr, key=lambda x: x):
     ans = min(arr)
     return arr.index(ans), ans
 
+# ------------------ Decision Trees -------------------------------------------
 def entropy(p):
     s = sum(p)
     p = [i / s for i in p]
@@ -93,3 +76,29 @@ def information_gain_ratio(X, Y, col):
     information_gain_of_col = information_gain(X, Y, col)
     entropy_of_col = entropy(Counter(x[col] for x in X).values())
     return information_gain_of_col / entropy_of_col
+
+def gini(Y):
+    cnt = Counter(Y)
+    ans = 0.
+    for y in cnt:
+        ans += (cnt[y] / len(Y)) ** 2
+    return 1 - ans
+
+# ------------------ Geometry -------------------------------------------------
+def kbline(k, b, **args):
+    """Plot a line from slope and intercept"""
+    axes = plt.gca()
+    x_vals = np.array(axes.get_xlim())
+    y_vals = b + k * x_vals
+    plt.plot(x_vals, y_vals, **args)
+
+def wbline(w, b, **args):
+    k = -w[0] / w[1]
+    b /= -w[1]
+    if np.isinf(k):
+        plt.vlines(b / w1, plt.gca().get_ylim(), **args)
+    else:
+        kbline(k, b, **args)
+
+def euc_dis(a, b):
+    return np.linalg.norm(a - b)

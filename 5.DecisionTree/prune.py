@@ -15,12 +15,14 @@ def prune(root, X, Y, alpha=.0, verbose=True):
     prune a decision tree recursively. alpha is the weight of tree size in the loss function
     reutrn the loss of all the leaf nodes
     """
+    # calculate the entropy of this subtree if the children of root is trimmed
     pruned_entropy = len(X) * entropy(Counter(Y).values())
     pruned_loss = pruned_entropy + alpha
     # if root is a leaf node, return loss directly
     if not root.children:
         return pruned_loss
     cur_loss = 0.
+    # trim child nodes recursively
     for col_val in root.children:
         child = root.children[col_val]
         ind = [x[root.col] == col_val for x in X]
