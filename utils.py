@@ -50,6 +50,10 @@ def argmin(arr, key=lambda x: x):
     ans = min(arr)
     return arr.index(ans), ans
 
+# ------------------ Functions ------------------------------------------------
+def sigmoid(x):
+    return 1 / (np.exp(-x) + 1)
+
 # ------------------ Decision Trees -------------------------------------------
 def entropy(p):
     s = sum(p)
