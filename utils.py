@@ -54,6 +54,10 @@ def argmin(arr, key=lambda x: x):
 def sigmoid(x):
     return 1 / (np.exp(-x) + 1)
 
+def binary_cross_entropy(pred, Y):
+    loss = -(Y * np.log(pred) + (1 - Y) * np.log(1 - pred)).sum()
+    return loss
+
 # ------------------ Decision Trees -------------------------------------------
 def entropy(p):
     s = sum(p)
