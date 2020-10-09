@@ -5,6 +5,7 @@ from math import inf, nan
 from math import log
 from collections import Counter
 
+# ------------------ Basic Structures -----------------------------------------
 class Heap:
     def __init__(self, arr=None, key=lambda x: x, max_len=inf):
         self.key = key
@@ -40,6 +41,7 @@ class Heap:
     def pop(self):
         return heapq.heappop(self.h)[-1]
 
+# ------------------ Functions ------------------------------------------------
 def argmax(arr, key=lambda x: x):
     arr = [key(a) for a in arr]
     ans = max(arr)
@@ -50,13 +52,33 @@ def argmin(arr, key=lambda x: x):
     ans = min(arr)
     return arr.index(ans), ans
 
-# ------------------ Functions ------------------------------------------------
 def sigmoid(x):
     return 1 / (np.exp(-x) + 1)
 
 def binary_cross_entropy(pred, Y):
     loss = -(Y * np.log(pred) + (1 - Y) * np.log(1 - pred)).sum()
     return loss
+
+def softmax(logits, axis=-1):
+    exps = np.exp(logits)
+    return exps / exps.sum(axis=axis, keepdims=True)
+
+def line_search(f, l, r, epsilon=1e-6):
+    """find the minimum point of a convex function"""
+    # TODO: golden-ratio search
+    while r - l >= epsilon:
+        ll = l + (r - l) / 3
+        rr = r - (r - l) / 3
+        fll = f(ll)
+        frr = f(rr)
+        if fll < frr:
+            r = rr
+        elif fll > frr:
+            l = ll
+        else:
+            l = ll
+            r = rr
+    return (l + r) / 2
 
 # ------------------ Decision Trees -------------------------------------------
 def entropy(p):
