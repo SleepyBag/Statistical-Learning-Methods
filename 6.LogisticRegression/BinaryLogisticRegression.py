@@ -50,37 +50,28 @@ class LogisticRegression:
         return Y
 
 if __name__ == "__main__":
-    logistic_regression = LogisticRegression(verbose=True)
+    def demonstrate(X, Y, desc):
+        logistic_regression = LogisticRegression(verbose=True)
+        logistic_regression.fit(X, Y)
+
+        # plot
+        plt.title(desc)
+        plt.scatter(X[:, 0], X[:, 1], c=Y)
+        wbline(logistic_regression.w, logistic_regression.b)
+        plt.show()
+
     # -------------------------- Example 1 ----------------------------------------
     X = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
     Y = np.array([1, 1, 0, 0])
-    logistic_regression.fit(X, Y)
-
-    # plot
-    plt.title("Example 1")
-    plt.scatter(X[:, 0], X[:, 1], c=Y)
-    wbline(logistic_regression.w, logistic_regression.b)
-    plt.show()
+    demonstrate(X, Y, "Example 1")
 
     # -------------------------- Example 2 ----------------------------------------
     X = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
     Y = np.array([1, 0, 0, 1])
-    logistic_regression.fit(X, Y)
-
-    # plot
-    plt.title("Example 2: Logistic Regression still cannot solve a simple XOR problem")
-    plt.scatter(X[:, 0], X[:, 1], c=Y)
-    wbline(logistic_regression.w, logistic_regression.b)
-    plt.show()
+    demonstrate(X, Y, "Example 2: Logistic Regression still cannot solve a simple XOR problem")
 
     # -------------------------- Example 3 ----------------------------------------
     X = np.concatenate([np.random.normal([0, 1], size=[40, 2]),
                         np.random.normal([1, 0], size=[40, 2])])
     Y = np.concatenate([np.ones(40), np.zeros(40)])
-    logistic_regression.fit(X, Y)
-
-    # plot
-    plt.title('Example 3: Logistic Regression is suitable for tasks that are not strictly linear separable')
-    plt.scatter(X[:, 0], X[:, 1], c=Y)
-    wbline(logistic_regression.w, logistic_regression.b)
-    plt.show()
+    demonstrate(X, Y, "Example 3: Logistic Regression is suitable for tasks that are not strictly linear separable")

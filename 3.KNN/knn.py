@@ -37,21 +37,24 @@ class KNN:
         return np.apply_along_axis(self._predict, axis=-1, arr=X)
 
 if __name__ == "__main__":
-    console = Console(markup=False)
+    def demonstrate(X_train, Y_train, X_test, k, desc):
+        console = Console(markup=False)
+        knn = KNN(k=k)
+        knn.fit(X_train, Y_train)
+        pred_test = knn.predict(X_test)
+
+        # plot
+        plt.scatter(X_train[:,0], X_train[:,1], c=Y_train, s=20)
+        plt.scatter(X_test[:,0], X_test[:,1], c=pred_test, marker=".", s=1)
+        plt.title(desc)
+        plt.show()
+
     # -------------------------- Example 1 ----------------------------------------
-    print("Example 1:")
-    knn = KNN()
     X_train = np.array([[0, 0], [0, 1], [1, 0], [1, 1], [.5, .5]])
     Y_train = np.array([1, 2, 3, 4, 5])
-    knn.fit(X_train, Y_train)
     # generate grid-shaped test data
     X_test = np.concatenate(np.stack(np.meshgrid(np.linspace(-1, 2, 100), np.linspace(-1, 2, 100)), axis=-1))
-    # X_test = X_train
-    pred_test = knn.predict(X_test)
-
-    # plot
-    plt.scatter(X_test[:,0], X_test[:,1], c=pred_test, marker=".", s=1)
-    plt.show()
+    demonstrate(X_train, Y_train, X_test, 1, "Example 1")
 
     # -------------------------- Example 2 (Imblance Data) ------------------------
     print("Example 2:")
@@ -61,9 +64,14 @@ if __name__ == "__main__":
     knn.fit(X_train, Y_train)
     # generate grid-shaped test data
     X_test = np.concatenate(np.stack(np.meshgrid(np.linspace(-1, 2, 100), np.linspace(-1, 2, 100)), axis=-1))
-    # X_test = X_train
-    pred_test = knn.predict(X_test)
+    demonstrate(X_train, Y_train, X_test, 1, "Example 2")
 
-    # plot
-    plt.scatter(X_test[:,0], X_test[:,1], c=pred_test, marker=".", s=1)
-    plt.show()
+    # -------------------------- Example 2 (Imblance Data) ------------------------
+    print("Example 2:")
+    X_train = np.array([[0, 0], [0, 1], [1, 0], [1, 1], [.5, .5]])
+    Y_train = np.array([1, 1, 2, 2, 2])
+    knn = KNN(k=3)
+    knn.fit(X_train, Y_train)
+    # generate grid-shaped test data
+    X_test = np.concatenate(np.stack(np.meshgrid(np.linspace(-1, 2, 100), np.linspace(-1, 2, 100)), axis=-1))
+    demonstrate(X_train, Y_train, X_test, 1, "Example 2")

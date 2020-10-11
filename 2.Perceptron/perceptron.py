@@ -1,8 +1,10 @@
+import os
 import numpy as np
 from matplotlib import pyplot as plt
 from rich.console import Console
 from rich.table import Table
 import sys
+from pathlib import Path
 sys.path.append(str(Path(os.path.abspath(__file__)).parent.parent))
 from utils import *
 
@@ -52,40 +54,32 @@ class Perceptron:
         return np.apply_along_axis(self._predict, axis=-1, arr=X)
 
 if __name__ == "__main__":
-    console = Console(markup=False)
-    perceptron = Perceptron(verbose=True)
+    def demonstrate(X, Y, desc):
+        console = Console(markup=False)
+        perceptron = Perceptron(verbose=True)
+        perceptron.fit(X, Y)
+
+        # plot
+        plt.scatter(X[:, 0], X[:, 1], c=Y)
+        wbline(perceptron.w, perceptron.b)
+        plt.title(desc)
+        plt.show()
+
+        # show in table
+        pred = perceptron.predict(X)
+        table = Table('x', 'y', 'pred')
+        for x, y, y_hat in zip(X, Y, pred):
+            table.add_row(*map(str, [x, y, y_hat]))
+        console.print(table)
+
     # -------------------------- Example 1 ----------------------------------------
     print("Example 1:")
     X = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
     Y = np.array([1, 1, -1, -1])
-    perceptron.fit(X, Y)
-
-    # plot
-    plt.scatter(X[:, 0], X[:, 1], c=Y)
-    wbline(perceptron.w, perceptron.b)
-    plt.show()
-
-    # show in table
-    pred = perceptron.predict(X)
-    table = Table('x', 'y', 'pred')
-    for x, y, y_hat in zip(X, Y, pred):
-        table.add_row(*map(str, [x, y, y_hat]))
-    console.print(table)
+    demonstrate(X, Y, "Example 1")
 
     # -------------------------- Example 2 ----------------------------------------
-    print("Example 2: (Perceptron cannot solve a simple XOR problem)")
+    print("Example 2: Perceptron cannot solve a simple XOR problem")
     X = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
     Y = np.array([1, -1, -1, 1])
-    perceptron.fit(X, Y)
-
-    # plot
-    plt.scatter(X[:, 0], X[:, 1], c=Y)
-    wbline(perceptron.w, perceptron.b)
-    plt.show()
-
-    # show in table
-    pred = perceptron.predict(X)
-    table = Table('x', 'y', 'pred')
-    for x, y, y_hat in zip(X, Y, pred):
-        table.add_row(*map(str, [x, y, y_hat]))
-    console.print(table)
+    demonstrate(X, Y, "Example 2: Perceptron cannot solve a simple XOR problem")
