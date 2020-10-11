@@ -2,7 +2,7 @@ from matplotlib import pyplot as plt
 import numpy as np
 import heapq
 from math import inf, nan
-from math import log
+from math import log, sqrt
 from collections import Counter
 
 # ------------------ Basic Structures -----------------------------------------
@@ -65,19 +65,25 @@ def softmax(logits, axis=-1):
 
 def line_search(f, l, r, epsilon=1e-6):
     """find the minimum point of a convex function"""
-    # TODO: golden-ratio search
+    lrate = (3 - sqrt(5)) / 2
+    rrate = (sqrt(5) - 1) / 2
+    fll, frr = None, None
     while r - l >= epsilon:
-        ll = l + (r - l) / 3
-        rr = r - (r - l) / 3
-        fll = f(ll)
-        frr = f(rr)
+        if fll is None:
+            ll = l + (r - l) * lrate
+            fll = f(ll)
+        if frr is None:
+            rr = l + (r - l) * rrate
+            frr = f(rr)
         if fll < frr:
-            r = rr
+            r, rr = rr, ll
+            frr, fll = fll, None
         elif fll > frr:
-            l = ll
+            l, ll = ll, rr
+            fll, frr = frr, None
         else:
-            l = ll
-            r = rr
+            l, r = ll, rr
+            fll, frr = None, None
     return (l + r) / 2
 
 # ------------------ Decision Trees -------------------------------------------
