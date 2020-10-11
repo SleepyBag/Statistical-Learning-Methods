@@ -63,10 +63,13 @@ class MaxEntropy:
         self.w = np.random.rand(self.nf)
         B = np.eye(self.nf)
         g_next = self._g(self.w)
+        g_norm = linalg.norm(g_next)
         # optimize
         for i in range(self.max_steps):
             g = g_next
-            if linalg.norm(g) < self.epsilon:
+            if self.verbose:
+                print(f"Step {i}, L2 norm of gradient is {g_norm}")
+            if g_norm < self.epsilon:
                 break
             p = linalg.solve(B, -g)
             f_lambda = lambda x: self._f(self.w + x * p)
@@ -74,7 +77,9 @@ class MaxEntropy:
             delta_w = lamda * p
             self.w += delta_w
             g_next = self._g(self.w)
-            if linalg.norm(g) < self.epsilon:
+            g_norm = linalg.norm(g_next)
+            if g_norm < self.epsilon:
+                print(f"L2 norm of gradient is {g_norm}, stop training...")
                 break
             delta_g = g_next - g
             B_delta_w = B @ delta_w
