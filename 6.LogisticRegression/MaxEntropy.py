@@ -120,15 +120,25 @@ if __name__ == "__main__":
     for x in range(2):
         table.add_row(f'x={x}', *map(float2str, [data[x, y] for y in range(3)]))
     console.print(table)
+
     # ---------------------- Example 1---------------------------------------------
-    print('Example 1:')
+    print('Example 1: Single feature function')
     feature_functions = np.array([
         [[1, 0, 0],
         [0, 0, 0]]
     ])
     demonstrate(data, feature_functions)
+
+    # ---------------------- Example 3---------------------------------------------
+    print('Example 2: the value of feature function doesn\'t matter for feature function with only one non-zero value')
+    feature_functions = np.array([
+        [[0.5, 0, 0],
+         [0, 0, 0]]
+    ])
+    demonstrate(data, feature_functions)
+
     # ---------------------- Example 2---------------------------------------------
-    print('Example 2:')
+    print('Example 3: double feature functions')
     feature_functions = np.array([
         [[1, 0, 0],
          [0, 0, 0]],
@@ -136,10 +146,19 @@ if __name__ == "__main__":
          [0, 1, 0]]
     ])
     demonstrate(data, feature_functions)
+
     # ---------------------- Example 3---------------------------------------------
-    print('Example 3:')
+    print('Example 4: single feature function with two non-zeros')
     feature_functions = np.array([
         [[0, 1, 1],
+         [0, 0, 0]]
+    ])
+    demonstrate(data, feature_functions)
+
+    # ---------------------- Example 3---------------------------------------------
+    print('Example 5: the value of feature function matters for feature function with multiple non-zero values')
+    feature_functions = np.array([
+        [[0, 1, .5],
          [0, 0, 0]]
     ])
     demonstrate(data, feature_functions)
