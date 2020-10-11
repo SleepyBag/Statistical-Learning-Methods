@@ -88,52 +88,58 @@ class MaxEntropy:
         self.p_w = self._p_w(self.w)
 
     def predict(self, x, y):
-        """predict the probability of (x, y) pair"""
+        """predict p(y|x)"""
         return self.p_w[x][y]
 
+# The following examples are proposed by SleepyBag at
+# https://www.zhihu.com/question/24094554/answer/1507080982
 if __name__ == "__main__":
     console = Console(markup=False)
-    max_entropy = MaxEntropy()
-    # The following examples are proposed by myself at
-    # https://www.zhihu.com/question/24094554/answer/1507080982
+    def float2str(x):
+        return "%.3f" % x
 
-    print('Example 1:')
+    def demonstrate(data, feature_functions):
+        max_entropy = MaxEntropy()
+        max_entropy.fit(data, feature_functions)
+
+        # print results
+        for i, ff in enumerate(feature_functions):
+            table = Table(f'feature {i}', 'y=1', 'y=2', 'y=3')
+            for x in range(2):
+                table.add_row(f'x={x}', *map(float2str, [ff[x, y] for y in range(3)]))
+            console.print(table)
+        table = Table('prob', 'y=1', 'y=2', 'y=3')
+        for x in range(2):
+            table.add_row(f'x={x}', *map(float2str, [max_entropy.predict(x, y) for y in range(3)]))
+        console.print(table)
+
+    # ---------------------- Prepare Data -----------------------------------------
     data = np.array([[.125, .25, .125],
-                     [.5, 0., 0.]])
+                    [.5, 0., 0.]])
+    table = Table('data', 'y=1', 'y=2', 'y=3')
+    for x in range(2):
+        table.add_row(f'x={x}', *map(float2str, [data[x, y] for y in range(3)]))
+    console.print(table)
+    # ---------------------- Example 1---------------------------------------------
+    print('Example 1:')
     feature_functions = np.array([
         [[1, 0, 0],
-         [0, 0, 0]]
+        [0, 0, 0]]
     ])
-    max_entropy.fit(data, feature_functions)
-    table = Table('prob', 'y=1', 'y=2', 'y=3')
-    for x in range(2):
-        table.add_row(f'x={x}', *map(str, [max_entropy.predict(x, y) for y in range(3)]))
-    console.print(table)
-
+    demonstrate(data, feature_functions)
+    # ---------------------- Example 2---------------------------------------------
     print('Example 2:')
-    data = np.array([[.125, .25, .125],
-                     [.5, 0., 0.]])
     feature_functions = np.array([
         [[1, 0, 0],
          [0, 0, 0]],
         [[0, 0, 0],
          [0, 1, 0]]
     ])
-    max_entropy.fit(data, feature_functions)
-    table = Table('prob', 'y=1', 'y=2', 'y=3')
-    for x in range(2):
-        table.add_row(f'x={x}', *map(str, [max_entropy.predict(x, y) for y in range(3)]))
-    console.print(table)
-
+    demonstrate(data, feature_functions)
+    # ---------------------- Example 3---------------------------------------------
     print('Example 3:')
-    data = np.array([[.125, .25, .125],
-                     [.5, 0., 0.]])
     feature_functions = np.array([
         [[0, 1, 1],
          [0, 0, 0]]
     ])
-    max_entropy.fit(data, feature_functions)
-    table = Table('prob', 'y=1', 'y=2', 'y=3')
-    for x in range(2):
-        table.add_row(f'x={x}', *map(str, [max_entropy.predict(x, y) for y in range(3)]))
-    console.print(table)
+    demonstrate(data, feature_functions)
