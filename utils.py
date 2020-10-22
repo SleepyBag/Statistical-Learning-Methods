@@ -1,7 +1,7 @@
 from matplotlib import pyplot as plt
 import numpy as np
 import heapq
-from math import inf, nan
+from math import inf
 from math import log, sqrt
 from collections import Counter
 
@@ -123,17 +123,19 @@ def gini(Y):
 # ------------------ Geometry -------------------------------------------------
 def kbline(k, b, **args):
     """Plot a line from slope and intercept"""
+    print(k, b)
     axes = plt.gca()
     x_vals = np.array(axes.get_xlim())
     y_vals = b + k * x_vals
     plt.plot(x_vals, y_vals, **args)
 
 def wbline(w, b, **args):
+    print(w, b)
     k = -w[0] / w[1]
-    b /= -w[1]
     if np.isinf(k):
-        plt.vlines(b / w1, plt.gca().get_ylim(), **args)
+        plt.vlines(-b / w[0], *plt.gca().get_ylim(), **args)
     else:
+        b /= -w[1]
         kbline(k, b, **args)
 
 def euc_dis(a, b):
