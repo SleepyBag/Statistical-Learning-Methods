@@ -5,19 +5,23 @@ import os
 from pathlib import Path
 from rich.console import Console
 from rich.table import Table
+from functools import partial
 sys.path.append(str(Path(os.path.abspath(__file__)).parent.parent))
 from utils import wbline
 
 class SVM:
-    def __init__(self, C=1e9, epsilon=1e-6, lr=1e-4, max_steps=1000, verbose=True):
+    def __init__(self, C=1e9, epsilon=1e-6, lr=1e-4, max_steps=1000, verbose=True, kernel=np.dot):
+        """
+        kernel: kernel function, of which
+                the input is two vectors a, b
+                the output is a scalar value
+        """
         self.lr = lr
         self.max_steps = max_steps
         self.verbose = verbose
         self.C = C
         self.epsilon = epsilon
-
-    def _dual_object(self):
-        return .5 * (self.alpha[:, None] * self.alpha * self.Y[:, None] * self.Y * self.K).sum() - self.alpha.sum()
+        self.kernel = kernel
 
     def _smo_objective(self, i, j):
         """
@@ -32,9 +36,9 @@ class SVM:
             - alpha[i] * alpha[j] * Y[i] * Y[j] * K[i, j]\
             - alpha[i] - alpha[j]
 
-    def _smo_step(self):
+    def _smo_step(self, step_cnt):
         if self.verbose:
-            print('SMO step start...')
+            print(f'SMO step {step_cnt} start...')
         alpha = self.alpha
         K = self.K
         data_size = len(alpha)
@@ -72,11 +76,11 @@ class SVM:
 
                 if self.verbose:
                     print('SMO chooses: ', i, j)
-                    print("L and H:", L, H)
+                    print('alpha[i] and alpha[j] are', alpha[i], alpha[j])
                     print('Step begin, current object of dual problem:', smo_objective_before)
 
                 alpha_j_old = alpha[j]
-                eta = K[i, i] + K[j, j] - 2 * K[i, j]
+                eta = K[i, i] + K[j, j] - 2 * K[i, j] + self.epsilon
                 # update alpha_j
                 alpha[j] += Y[j] * (error[i] - error[j]) / eta
                 # clip
@@ -91,6 +95,7 @@ class SVM:
                 smo_objective_after = self._smo_objective(i, j)
                 if self.verbose:
                     print('Step end, current object of dual problem:', smo_objective_after)
+                    print('alpha[i] and alpha[j] are', alpha[i], alpha[j])
                 if smo_objective_before - smo_objective_after > self.epsilon:
                     updated = True
                     break
@@ -101,46 +106,63 @@ class SVM:
             print()
         return len(i_cands) > 0
 
-    def fit(self, X, Y, kernel=lambda x: x @ x.T):
+    def fit(self, X, Y):
         """
         optimize SVM with SMO
         X: of shape [data-size, feature-size]
         Y: of shape [data-size]
-        kernel: kernel function, which
-                input is X of shape [data-size, feature-size] and
-                output a kernel matrix of shape [data-size, data-size]
         """
         self.X, self.Y = X, Y
         data_size = len(X)
         self.alpha = np.zeros(data_size)
         self.b = np.random.rand()
 
-        self.K = kernel(X)
+        self.K = np.array([[self.kernel(x1, x2) for x1 in X] for x2 in X])
+        print(self.K)
         # optimize
-        while self._smo_step():
+        step_cnt = 0
+        while self._smo_step(step_cnt) and step_cnt < self.max_steps:
+            step_cnt += 1
             pass
 
         # optimized, get w and b
-        self.w = ((self.alpha * Y)[:, None] * X).sum(axis=0)
+        support_vector_ind = 0 < self.alpha
+        self._support_vectors = X[support_vector_ind]
+        self._support_Y = Y[support_vector_ind]
+        self._support_alpha = self.alpha[support_vector_ind]
         if self.verbose:
             print("Done!")
+            print('Alphas are as follows:')
+            print(self.alpha)
+            print(support_vector_ind)
+            print('Support vectors are as follows:')
+            print(self._support_vectors)
+
+        # for demonstration
+        self.w = ((self.alpha * Y)[:, None] * X).sum(axis=0)
+
+    def _predict(self, x):
+        return (self._support_Y * self._support_alpha * \
+            np.apply_along_axis(partial(self.kernel, x), -1, self._support_vectors)).sum()
 
     def predict(self, X):
-        score = (self.w * X).sum(axis=-1) + self.b
+        score = np.apply_along_axis(self._predict, -1, X)
+        # score = (self.w * X).sum(axis=-1) + self.b
         pred = (score >= 0).astype(int) * 2 - 1
         return pred
 
 if __name__ == "__main__":
-    def demonstrate(X, Y, desc):
+    def demonstrate(X, Y, desc, draw=True, **args):
         console = Console(markup=False)
-        svm = SVM(verbose=True)
+        svm = SVM(verbose=True, **args)
         svm.fit(X, Y)
 
         # plot
-        plt.scatter(X[:, 0], X[:, 1], c=Y)
-        wbline(svm.w, svm.b)
-        plt.title(desc)
-        plt.show()
+        if draw:
+            plt.scatter(X[:, 0], X[:, 1], c=Y)
+            wbline(svm.w, svm.b)
+            plt.title(desc)
+            plt.show()
 
         # show in table
         pred = svm.predict(X)
@@ -151,19 +173,27 @@ if __name__ == "__main__":
 
     # -------------------------- Example 1 ----------------------------------------
     print("Example 1:")
-    X = np.array([[0, 1], [1, 0], [1, 1]])
-    Y = np.array([1, -1, -1])
+    X = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
+    Y = np.array([1, 1, -1, -1])
     demonstrate(X, Y, "Example 1")
 
     # -------------------------- Example 2 ----------------------------------------
     print("Example 2:")
-    X = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
-    Y = np.array([1, 1, -1, -1])
-    demonstrate(X, Y, "Example 2")
-
-    # -------------------------- Example 3 ----------------------------------------
-    print("Example 3:")
     X = np.concatenate((np.random.rand(5, 2), np.random.rand(5, 2) + np.array([1, 1])), axis=0)
     Y = np.array([1, 1, 1, 1, 1, -1, -1, -1, -1, -1])
     print(X, Y)
-    demonstrate(X, Y, "Example 3")
+    demonstrate(X, Y, "Example 2: randomly generated data")
+
+    # ---------------------- Example 3---------------------------------------------
+    print("Example 3:")
+    X = np.array([[0, 0], [1, 1], [1, 0], [0, 1]])
+    Y = np.array([1, 1, -1, -1])
+    demonstrate(X, Y, "Example 3: SVM with dot kernel cannot sovle XOR problem", C=1)
+
+    # ---------------------- Example 4---------------------------------------------
+    def gaussian_kernel(x, y):
+        return np.exp(-((x - y) ** 2).sum())
+    print("Example 4:")
+    X = np.array([[0, 0], [1, 1], [1, 0], [0, 1]])
+    Y = np.array([1, 1, -1, -1])
+    demonstrate(X, Y, "Example 4: SVM with dot kernel cannot sovle XOR problem", draw=False, kernel=gaussian_kernel)
