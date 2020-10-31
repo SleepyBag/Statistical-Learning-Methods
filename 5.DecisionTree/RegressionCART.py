@@ -2,7 +2,6 @@ import numpy as np
 from pprint import pprint
 from rich.console import Console
 from rich.table import Table
-from collections import Counter
 import sys
 import os
 from pathlib import Path
@@ -18,8 +17,12 @@ class RegressionCART:
             self.left, self.right = None, None
             self.label = Y.mean()
 
-    def __init__(self, verbose=False):
+        def __hash__(self):
+            return id(self)
+
+    def __init__(self, verbose=False, max_depth=inf):
         self.verbose = verbose
+        self.max_depth = max_depth
 
     def get_se_of_split(self, Y1, Y2):
         """get the square error of a split"""
@@ -31,7 +34,7 @@ class RegressionCART:
         square_error2 = ((Y2 - center2) ** 2).sum()
         return square_error1 + square_error2
 
-    def build(self, X, Y):
+    def build(self, X, Y, depth=1):
         cur = self.Node(None, Y)
         if self.verbose:
             print("Cur data:")
@@ -40,8 +43,9 @@ class RegressionCART:
         best_se = inf
         best_col, best_val = -1, nan
         # The orignal content of the book doesn't discuss about when to cease.
-        # So I take the easiest way: cease when the data cannot be splitted
-        if len(set(Y)) > 1:
+        # So I take the easiest way: cease when the data cannot be splitted,
+        # i.e., there are different labels
+        if depth < self.max_depth and len(set(Y)) > 1:
             for col in range(len(X[0])):
                 for val in X[:, col]:
                     # Don't split by the minimal value
@@ -57,7 +61,8 @@ class RegressionCART:
                             best_se, best_col, best_val = se, col, val
 
             # Build left and right child nodes recursively
-            print(f"Split by value {best_val} of {best_col}th column")
+            if self.verbose:
+                print(f"Split by value {best_val} of {best_col}th column")
             smaller_ind = X[:, best_col] <= best_val
             larger_ind = X[:, best_col] > best_val
             smaller_X = X[smaller_ind]
@@ -67,18 +72,21 @@ class RegressionCART:
 
             cur.col = best_col
             cur.val = best_val
-            cur.left = self.build(smaller_X, smaller_Y)
-            cur.right = self.build(larger_X, larger_Y)
+            cur.left = self.build(smaller_X, smaller_Y, depth + 1)
+            cur.right = self.build(larger_X, larger_Y, depth + 1)
         elif self.verbose:
             print("No split")
         return cur
 
-    def query(self, root, x):
+    def _query_leaf(self, root, x):
         if root.col is None:
-            return root.label
+            return root
         elif x[root.col] > root.val:
-            return self.query(root.right, x)
-        return self.query(root.left, x)
+            return self._query_leaf(root.right, x)
+        return self._query_leaf(root.left, x)
+
+    def query(self, root, x):
+        return self._query_leaf(root, x).label
 
     def fit(self, X, Y):
         self.root = self.build(X, Y)
@@ -90,25 +98,40 @@ class RegressionCART:
         return [self._predict(x) for x in X]
 
 if __name__ == "__main__":
-    console = Console(markup=False)
-    cart = RegressionCART(verbose=True)
+    def demonstrate(cart, X, Y, test_X, test_Y, desc):
+        print(desc)
+        console = Console(markup=False)
+        cart.fit(X, Y)
+
+        # show in table
+        pred = cart.predict(test_X)
+        table = Table('x', 'y', 'pred')
+        for x, y, y_hat in zip(test_X, test_Y, pred):
+            table.add_row(*map(str, [x, y, y_hat]))
+        console.print(table)
+
     # -------------------------- Example 1 ----------------------------------------
-    print("Example 1:")
+    cart = RegressionCART(verbose=True)
     X = np.arange(1, 11).reshape(-1, 1)
     Y = np.array([4.5, 4.75, 4.91, 5.34, 5.8, 7.05, 7.90, 8.23, 8.70, 9.00])
-    cart.fit(X, Y)
+    demonstrate(cart, X, Y, X, Y, "Example 1:")
 
+    # -------------------------- Example 2 ----------------------------------------
     # show in table
-    pred = cart.predict(X)
-    table = Table('x', 'y', 'pred')
-    for x, y, y_hat in zip(X, Y, pred):
-        table.add_row(*map(str, [x, y, y_hat]))
-    console.print(table)
-
-    # show in table
+    cart = RegressionCART(verbose=True)
     test_X = X + .5
-    pred = cart.predict(test_X)
-    table = Table('x', 'pred')
-    for x, y_hat in zip(test_X, pred):
-        table.add_row(*map(str, [x, y_hat]))
-    console.print(table)
+    test_Y = np.zeros_like(Y) + nan
+    demonstrate(cart, X, Y, test_X, test_Y, "Example 2:")
+
+    # -------------------------- Example 3 ----------------------------------------
+    cart = RegressionCART(verbose=True, max_depth=1)
+    X = np.arange(1, 11).reshape(-1, 1)
+    Y = np.array([4.5, 4.75, 4.91, 5.34, 5.8, 7.05, 7.90, 8.23, 8.70, 9.00])
+    demonstrate(cart, X, Y, X, Y, "Example 3: CART stump")
+
+
+    # -------------------------- Example 4 ----------------------------------------
+    cart = RegressionCART(verbose=True, max_depth=3)
+    X = np.arange(1, 11).reshape(-1, 1)
+    Y = np.array([4.5, 4.75, 4.91, 5.34, 5.8, 7.05, 7.90, 8.23, 8.70, 9.00])
+    demonstrate(cart, X, Y, X, Y, "Example 4: split twice")

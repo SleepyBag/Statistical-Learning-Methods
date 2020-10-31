@@ -1,7 +1,7 @@
 from matplotlib import pyplot as plt
 import numpy as np
 import heapq
-from math import inf
+from math import inf, nan
 from math import log, sqrt
 from collections import Counter
 

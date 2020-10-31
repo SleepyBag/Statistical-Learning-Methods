@@ -77,6 +77,7 @@ class AdaBoost:
 
 if __name__ == "__main__":
     def demonstrate(X, Y, desc):
+        print(desc)
         console = Console(markup=False)
         adaboost = AdaBoost(verbose=True)
         adaboost.fit(X, Y)
@@ -89,7 +90,6 @@ if __name__ == "__main__":
         console.print(table)
 
     # -------------------------- Example 1 ----------------------------------------
-    print("Example 1:")
     X = np.arange(10).reshape(-1, 1)
     Y = np.array([1, 1, 1, -1, -1, -1, 1, 1, 1, -1])
     demonstrate(X, Y, "Example 1")
