@@ -1,6 +1,4 @@
 from collections import defaultdict
-from math import log
-from matplotlib import pyplot as plt
 import numpy as np
 import sys
 import os
@@ -9,7 +7,7 @@ from rich.console import Console
 from rich.table import Table
 from functools import partial
 sys.path.append(str(Path(os.path.abspath(__file__)).parent.parent))
-from utils import wbline, line_search
+from utils import line_search
 sys.path.append(str(Path(os.path.abspath(__file__)).parent.parent / '5.DecisionTree'))
 from RegressionCART import RegressionCART
 
