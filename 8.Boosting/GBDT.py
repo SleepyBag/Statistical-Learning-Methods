@@ -23,6 +23,7 @@ class GBDT:
         `gradient_function` is gradient from loss function to the prediction
         It takes two arguments, i.e., label and pred and return the gradient
         the loss function should be convex
+        The default loss function is l2 loss, which makes GBDT an ordinary boosting tree
         """
         self.steps = steps
         self.verbose = verbose
