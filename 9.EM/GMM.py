@@ -64,25 +64,28 @@ if __name__ == '__main__':
     demonstrate("Example 1", X)
 
     # ---------------------- Eample 2---------------------------------------------
+    demonstrate("Example 2: GMM does'nt promise the same result for the same data", X)
+
+    # ---------------------- Eample 3---------------------------------------------
     X = np.concatenate([
         np.random.normal([0, 0], [.4, .4], [100, 2]),
         np.random.normal([0, 1], [.4, .4], [100, 2]),
         np.random.normal([1, 0], [.4, .4], [100, 2]),
     ])
-    demonstrate("Example 2", X)
+    demonstrate("Example 3", X)
 
-    # ---------------------- Eample 3---------------------------------------------
+    # ---------------------- Eample 4---------------------------------------------
     X = np.concatenate([
         np.random.normal([0, 0], [.4, .4], [100, 2]),
         np.random.normal([0, 3], [.4, .4], [100, 2]),
         np.random.normal([3, 0], [.4, .4], [100, 2]),
     ])
-    demonstrate("Example 3", X)
+    demonstrate("Example 4", X)
 
-    # ---------------------- Eample 4---------------------------------------------
+    # ---------------------- Eample 5---------------------------------------------
     X = np.concatenate([
         np.random.normal([0, 0], [.4, .4], [1, 2]),
         np.random.normal([0, 3], [.4, .4], [1, 2]),
         np.random.normal([3, 0], [.4, .4], [1, 2]),
     ])
-    demonstrate("Example 4", X)
+    demonstrate("Example 5", X)
