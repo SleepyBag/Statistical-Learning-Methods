@@ -18,11 +18,12 @@ class GMM:
         self.mean = np.random.rand(self.k, feature_size)
         self.std = np.std(X, axis=0, keepdims=True)
 
+        pre_likelihood = np.zeros([self.k, n])
         for step in range(self.max_step):
             # Expectation step
             posterior = self.predict(X)
 
-            # Maximum step
+            # Maximization step
             self.mean = (posterior[:, :, None] * X[None, :, :]).sum(axis=1) / \
                 (posterior.sum(axis=1)[:, None] + self.epsilon)
             var = (posterior[:, :, None] * (X[None, :, :] - self.mean[:, None, :]) ** 2).sum(axis=1) / \
@@ -30,6 +31,10 @@ class GMM:
             self.std = np.sqrt(var)
             self.prior = posterior.sum(axis=1)
             self.prior /= (self.prior.sum() + self.epsilon)
+
+            if (self.likelihood - pre_likelihood).max() < self.epsilon:
+                break
+            pre_likelihood = self.likelihood
 
     def predict(self, X):
         """return the probability of each x belonging to each gaussian distribution"""
@@ -40,6 +45,7 @@ class GMM:
         log_likelihood = log_likelihood.sum(-1)
         # reduce likelihood to shape [k, n]
         likelihood = np.exp(log_likelihood)
+        self.likelihood = likelihood
         # the posterior of each datium belonging to a distribution, of shape [k, n]
         posterior = self.prior[:, None] * likelihood
         posterior /= (posterior.sum(axis=0, keepdims=True) + self.epsilon)
