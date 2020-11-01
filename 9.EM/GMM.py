@@ -2,7 +2,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 
 class GMM:
-    def __init__(self, k, max_step=200):
+    def __init__(self, k, max_step=2000):
         self.k = k
         self.max_step = max_step
         self.epsilon = 1e-8
@@ -15,8 +15,8 @@ class GMM:
         # the parameter of each gaussian distribution
         self.prior = np.ones(self.k) / self.k
         self.prior /= self.prior.sum()
-        self.mean = np.random.rand(self.k, feature_size)
-        self.std = np.std(X, axis=0, keepdims=True)
+        self.std = np.repeat(np.std(X, axis=0, keepdims=True), self.k, axis=0)
+        self.mean = np.random.normal(X.mean(axis=0), self.std, [self.k, feature_size])
 
         pre_likelihood = np.zeros([self.k, n])
         for step in range(self.max_step):
