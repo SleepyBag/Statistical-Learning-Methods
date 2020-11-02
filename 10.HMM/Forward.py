@@ -4,7 +4,7 @@ import os
 sys.path.append(str(Path(os.path.abspath(__file__)).parent.parent))
 from utils import *
 
-def forward(state2state, state2observation, initial_state, observation, observation_size):
+def forward(state2state, state2observation, initial_state, observation):
     """
     Given a HMM with parameter (state2state, state2observation, initial_state)
     and the observation,
@@ -16,7 +16,7 @@ def forward(state2state, state2observation, initial_state, observation, observat
     observation is a tensor shaped of [sequence_length]
     observation_size is the number of all the possible observations
 
-    the return value is a tensor shaped of [sequence_length]
+    the return value is a scalar
     """
     state_prob = initial_state
     for o in observation:
@@ -40,4 +40,4 @@ if __name__ == '__main__':
         )
     pi = np.array([.2, .4, .4])
     observation = np.array([0, 1, 0])
-    print(forward(A, B, pi, observation, 2))
+    print(forward(A, B, pi, observation))

@@ -86,6 +86,12 @@ def line_search(f, l, r, epsilon=1e-6):
             fll, frr = None, None
     return (l + r) / 2
 
+def one_hot(i, size):
+    """Given a hot number the tensor size, return the one-hot tensor"""
+    ans = np.zeros(size)
+    ans[i] = 1
+    return ans
+
 # ------------------ Decision Trees -------------------------------------------
 def entropy(p):
     s = sum(p)
