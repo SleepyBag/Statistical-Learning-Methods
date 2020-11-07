@@ -16,16 +16,24 @@ def backward(state2state, state2observation, initial_state, observation):
     observation is a tensor shaped of [sequence_length]
     observation_size is the number of all the possible observations
 
-    the return value is a scalar
+    the return value consists of two parts:
+    the probability of the observation,
+    and a sequence of probability of each state of each step
     """
+    state_size, _ = state2state.shape
+    sequence_length, = observation.shape
+
+    seq_state_prob = np.zeros([sequence_length, state_size])
     state_prob = np.ones_like(initial_state)
-    for o in observation:
-        # the prior probability of each state in next step
+    for i in range(sequence_length - 1, -1, -1):
+        o = observation[i]
+        # given the observation of the following steps, get the probability of this state
         state_prob = state2state @ state_prob
-        # given the observation of current step, get the posterior probability of this state
+        seq_state_prob[i] = state_prob
+        # given the observation of this step, get the probability of this state
         state_prob *= state2observation[:, o]
     state_prob *= initial_state
-    return sum(state_prob)
+    return sum(state_prob), seq_state_prob
 
 
 if __name__ == '__main__':
@@ -41,4 +49,4 @@ if __name__ == '__main__':
         )
     pi = np.array([.2, .4, .4])
     observation = np.array([0, 1, 0])
-    print(backward(A, B, pi, observation))
+    print(backward(A, B, pi, observation)[0])
