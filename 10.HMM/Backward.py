@@ -1,8 +1,8 @@
+import numpy as np
 from pathlib import Path
 import sys
 import os
 sys.path.append(str(Path(os.path.abspath(__file__)).parent.parent))
-from utils import *
 
 def backward(state2state, state2observation, initial_state, observation):
     """
@@ -23,17 +23,17 @@ def backward(state2state, state2observation, initial_state, observation):
     state_size, _ = state2state.shape
     sequence_length, = observation.shape
 
-    seq_state_prob = np.zeros([sequence_length, state_size])
-    state_prob = np.ones_like(initial_state)
+    seq_state_likelihood = np.zeros([sequence_length, state_size])
+    state_likelihood = np.ones_like(initial_state)
     for i in range(sequence_length - 1, -1, -1):
         o = observation[i]
-        # given the observation of the following steps, get the probability of this state
-        state_prob = state2state @ state_prob
-        seq_state_prob[i] = state_prob
+        # given the parameter of HMM and each possible state this step, get the probability of the following observation
+        state_likelihood = state2state @ state_likelihood
+        seq_state_likelihood[i] = state_likelihood
         # given the observation of this step, get the probability of this state
-        state_prob *= state2observation[:, o]
-    state_prob *= initial_state
-    return sum(state_prob), seq_state_prob
+        state_likelihood *= state2observation[:, o]
+    state_prob = state_likelihood * initial_state
+    return sum(state_prob), seq_state_likelihood
 
 
 if __name__ == '__main__':

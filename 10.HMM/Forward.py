@@ -1,8 +1,8 @@
+import numpy as np
 from pathlib import Path
 import sys
 import os
 sys.path.append(str(Path(os.path.abspath(__file__)).parent.parent))
-from utils import *
 
 def forward(state2state, state2observation, initial_state, observation):
     """
@@ -26,12 +26,11 @@ def forward(state2state, state2observation, initial_state, observation):
     seq_state_prob = np.zeros([sequence_length, state_size])
     state_prob = initial_state
     for i, o in enumerate(observation):
-        # given the observation of previous steps, get the probability of this state
+        # given the parameters of HMM, get the probability of this state with the previous observation
         state_prob *= state2observation[:, o]
         seq_state_prob[i] = state_prob
         # the probability of each state in next step
         state_prob = state_prob @ state2state
-    print(seq_state_prob)
     return sum(seq_state_prob[-1]), seq_state_prob
 
 
