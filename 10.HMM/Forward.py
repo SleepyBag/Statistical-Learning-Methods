@@ -1,8 +1,4 @@
 import numpy as np
-from pathlib import Path
-import sys
-import os
-sys.path.append(str(Path(os.path.abspath(__file__)).parent.parent))
 
 def forward(state2state, state2observation, initial_state, observation):
     """
