@@ -1,4 +1,6 @@
 import numpy as np
+from rich.console import Console
+from rich.table import Table
 
 def backward(state2state, state2observation, initial_state, observation):
     """
@@ -9,40 +11,84 @@ def backward(state2state, state2observation, initial_state, observation):
     state2state is a matrix shaped of [state_size, state_size]
     state2observation is a matrix shaped of [state_size, observation_size]
     initial_state is a tensor shaped of [state_size], whose each dimension means the probability of each state
-    observation is a tensor shaped of [sequence_length]
+    observation is a matrix shaped of [sequence_length]
+
+    where
+
+    data_size is the number of all the data initial_stateeces
+    state_size is the number of all the possible states
     observation_size is the number of all the possible observations
+    sequence_length is the length of each sequence
 
     the return value consists of two parts:
     the probability of the observation,
     and a sequence of probability of each state of each step
     """
     state_size, _ = state2state.shape
-    sequence_length, = observation.shape
+    data_size, sequence_length = observation.shape
 
-    seq_state_likelihood = np.zeros([sequence_length, state_size])
-    state_likelihood = np.ones_like(initial_state)
+    seq_state_likelihood = np.zeros([data_size, sequence_length, state_size])
+    state_likelihood = np.ones([state_size, data_size])
     for i in range(sequence_length - 1, -1, -1):
-        o = observation[i]
+        o = observation[:, i]
         # given the parameter of HMM and each possible state this step, get the probability of the following observation
         state_likelihood = state2state @ state_likelihood
-        seq_state_likelihood[i] = state_likelihood
+        seq_state_likelihood[:, i, :] = state_likelihood.T
         # given the observation of this step, get the probability of this state
-        state_likelihood *= state2observation[:, o]
-    state_prob = state_likelihood * initial_state
-    return sum(state_prob), seq_state_likelihood
+        state_likelihood = state_likelihood * state2observation[:, o]
+    state_prob = state_likelihood.T * initial_state
+    return state_prob.sum(axis=-1), seq_state_likelihood
 
 
 if __name__ == '__main__':
-    A = np.array(
+    def demonstrate(state2state, state2observation, initial_state, observation, desc):
+        console = Console(markup=False)
+        prob = backward(state2state, state2observation, initial_state, observation)[0]
+
+        # show in table
+        print(desc)
+        table = Table('sequence', 'prob')
+        for o, p in zip(observation, prob):
+            table.add_row(str(o), str(p))
+        table.add_row("Sum", str(sum(prob)))
+        console.print(table)
+
+    # ---------------------- Example 1 --------------------------------------------
+    state2state = np.array(
         [[.5, .2, .3],
          [.3, .5, .2],
          [.2, .3, .5]]
-        )
-    B = np.array(
+    )
+    state2observation = np.array(
         [[.5, .5],
          [.4, .6],
          [.7, .3]]
-        )
-    pi = np.array([.2, .4, .4])
-    observation = np.array([0, 1, 0])
-    print(backward(A, B, pi, observation)[0])
+    )
+    initial_state = np.array([.2, .4, .4])
+    observation = np.array([
+        [0, 0, 0],
+        [0, 0, 1],
+        [0, 1, 0],
+        [0, 1, 1],
+        [1, 0, 0],
+        [1, 0, 1],
+        [1, 1, 0],
+        [1, 1, 1],
+    ])
+    demonstrate(state2state, state2observation, initial_state, observation, "Example 1")
+
+    # ---------------------- Example 2 --------------------------------------------
+    state2state = np.array(
+        [[.5, .5],
+         [.5, .5]]
+    )
+    state2observation = np.array(
+        [[.5, .5],
+         [.5, .5]]
+    )
+    initial_state = np.array([.5, .5])
+    observation = np.array([
+        [0],
+        [1],
+    ])
+    demonstrate(state2state, state2observation, initial_state, observation, "Example 2")

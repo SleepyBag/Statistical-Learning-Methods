@@ -1,4 +1,6 @@
 import numpy as np
+from rich.console import Console
+from rich.table import Table
 
 def forward(state2state, state2observation, initial_state, observation):
     """
@@ -9,38 +11,98 @@ def forward(state2state, state2observation, initial_state, observation):
     state2state is a matrix shaped of [state_size, state_size]
     state2observation is a matrix shaped of [state_size, observation_size]
     initial_state is a tensor shaped of [state_size], whose each dimension means the probability of each state
-    observation is a tensor shaped of [sequence_length]
+    observation is a matrix shaped of [data_size, sequence_length]
+
+    where
+
+    data_size is the number of all the data initial_stateeces
+    state_size is the number of all the possible states
     observation_size is the number of all the possible observations
+    sequence_length is the length of each sequence
 
     the return value consists of two parts:
     the probability of the observation,
     and a sequence of probability of each state of each step
     """
     state_size, _ = state2state.shape
-    sequence_length, = observation.shape
+    data_size, sequence_length = observation.shape
 
-    seq_state_prob = np.zeros([sequence_length, state_size])
-    state_prob = initial_state
-    for i, o in enumerate(observation):
+    seq_state_prob = np.zeros([data_size, sequence_length, state_size])
+    state_prob = initial_state[None, :]
+    for i, o in enumerate(observation.T):
         # given the parameters of HMM, get the probability of this state with the previous observation
-        state_prob *= state2observation[:, o]
-        seq_state_prob[i] = state_prob
+        state_prob = state_prob * state2observation.T[o]
+        seq_state_prob[:, i, :] = state_prob
         # the probability of each state in next step
         state_prob = state_prob @ state2state
-    return sum(seq_state_prob[-1]), seq_state_prob
+    return state_prob.sum(axis=-1), seq_state_prob
 
 
 if __name__ == '__main__':
-    A = np.array(
+    def demonstrate(state2state, state2observation, initial_state, observation, desc):
+        console = Console(markup=False)
+        prob = forward(state2state, state2observation, initial_state, observation)[0]
+
+        # show in table
+        print(desc)
+        table = Table('sequence', 'prob')
+        for o, p in zip(observation, prob):
+            table.add_row(str(o), str(p))
+        table.add_row("Sum", str(sum(prob)))
+        console.print(table)
+
+    # ---------------------- Example 1 --------------------------------------------
+    state2state = np.array(
         [[.5, .2, .3],
          [.3, .5, .2],
          [.2, .3, .5]]
-        )
-    B = np.array(
+    )
+    state2observation = np.array(
         [[.5, .5],
          [.4, .6],
          [.7, .3]]
-        )
-    pi = np.array([.2, .4, .4])
-    observation = np.array([0, 1, 0])
-    print(forward(A, B, pi, observation)[0])
+    )
+    initial_state = np.array([.2, .4, .4])
+    observation = np.array([
+        [0, 0, 0],
+        [0, 0, 1],
+        [0, 1, 0],
+        [0, 1, 1],
+        [1, 0, 0],
+        [1, 0, 1],
+        [1, 1, 0],
+        [1, 1, 1],
+    ])
+    demonstrate(state2state, state2observation, initial_state, observation, "Example 1")
+
+    # ---------------------- Example 2 --------------------------------------------
+    state2state = np.array(
+        [[.5, .5],
+         [.5, .5]]
+    )
+    state2observation = np.array(
+        [[.5, .5],
+         [.5, .5]]
+    )
+    initial_state = np.array([.5, .5])
+    observation = np.array([
+        [0],
+        [1],
+    ])
+    demonstrate(state2state, state2observation, initial_state, observation, "Example 2")
+
+
+    # ---------------------- Example 2 --------------------------------------------
+    state2state = np.array(
+        [[.0, 1.],
+         [1., .0]]
+    )
+    state2observation = np.array(
+        [[1., 0.],
+         [0., 1.]]
+    )
+    initial_state = np.array([0., 1.])
+    observation = np.array([
+        [1, 0, 1, 0, 1, 0],
+    ])
+    demonstrate(state2state, state2observation, initial_state, observation, "Example 2")
