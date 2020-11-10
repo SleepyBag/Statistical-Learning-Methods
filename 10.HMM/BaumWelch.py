@@ -8,7 +8,7 @@ sys.path.append(str(Path(os.path.abspath(__file__)).parent.parent / '10.HMM'))
 from Backward import backward
 from Forward import forward
 
-def baum_welch(observation, state_size, observation_size, epsilon=1e-8, max_steps=500):
+def baum_welch(observation, state_size, observation_size, epsilon=1e-8, max_iteration=500):
     """
     Given a batch of sequence of observation,
     return the parameter of the learnt HMM
@@ -31,7 +31,7 @@ def baum_welch(observation, state_size, observation_size, epsilon=1e-8, max_step
     state2observation /= state2observation.sum(axis=-1, keepdims=True)
     initial_state /= initial_state.sum()
 
-    for step in range(max_steps):
+    for _ in range(max_iteration):
         pre_state2state, pre_state2observation, pre_initial_state = state2state, state2observation, initial_state
 
         # Expectation step, from parameters to probability of states
@@ -50,6 +50,7 @@ def baum_welch(observation, state_size, observation_size, epsilon=1e-8, max_step
 
         # Maximization step, from probability of states to parameters
         state2state = state_trans_prob.sum(axis=(0, 1)) / state_prob[:, :-1, :].sum(axis=(0, 1))[:, None]
+        state2state /= state2state.sum(axis=-1, keepdims=True)
         state2observation = ((observation[:, :, None] == np.arange(observation_size)[None, None, :])[:, :, None, :] *
                              state_prob[:, :, :, None]).sum(axis=(0, 1)) / state_prob.sum(axis=(0, 1))[:, None]
         initial_state = state_prob[:, 0].mean(axis=0)
