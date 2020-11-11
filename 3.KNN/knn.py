@@ -1,8 +1,6 @@
 import numpy as np
 import matplotlib
 from matplotlib import pyplot as plt
-from rich.console import Console
-from rich.table import Table
 from functools import partial
 import sys
 import os
@@ -38,7 +36,6 @@ class KNN:
 
 if __name__ == "__main__":
     def demonstrate(X_train, Y_train, X_test, k, desc):
-        console = Console(markup=False)
         knn = KNN(k=k)
         knn.fit(X_train, Y_train)
         pred_test = knn.predict(X_test)
@@ -56,22 +53,16 @@ if __name__ == "__main__":
     X_test = np.concatenate(np.stack(np.meshgrid(np.linspace(-1, 2, 100), np.linspace(-1, 2, 100)), axis=-1))
     demonstrate(X_train, Y_train, X_test, 1, "Example 1")
 
-    # -------------------------- Example 2 (Imblance Data) ------------------------
-    print("Example 2:")
+    # -------------------------- Example 2 (Imbalanced Data) ------------------------
     X_train = np.array([[0, 0], [0, 1], [1, 0], [1, 1], [.5, .5]])
     Y_train = np.array([1, 1, 2, 3, 4])
-    knn = KNN(k=2)
-    knn.fit(X_train, Y_train)
     # generate grid-shaped test data
     X_test = np.concatenate(np.stack(np.meshgrid(np.linspace(-1, 2, 100), np.linspace(-1, 2, 100)), axis=-1))
     demonstrate(X_train, Y_train, X_test, 1, "Example 2")
 
-    # -------------------------- Example 2 (Imblance Data) ------------------------
-    print("Example 2:")
+    # -------------------------- Example 3 (Imbalanced Data) ------------------------
     X_train = np.array([[0, 0], [0, 1], [1, 0], [1, 1], [.5, .5]])
     Y_train = np.array([1, 1, 2, 2, 2])
-    knn = KNN(k=3)
-    knn.fit(X_train, Y_train)
     # generate grid-shaped test data
     X_test = np.concatenate(np.stack(np.meshgrid(np.linspace(-1, 2, 100), np.linspace(-1, 2, 100)), axis=-1))
-    demonstrate(X_train, Y_train, X_test, 1, "Example 2")
+    demonstrate(X_train, Y_train, X_test, 1, "Example 3")

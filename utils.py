@@ -143,4 +143,4 @@ def wbline(w, b, **args):
         kbline(k, b, **args)
 
 def euc_dis(a, b):
-    return np.linalg.norm(a - b)
+    return np.linalg.norm(a - b, axis=-1)
