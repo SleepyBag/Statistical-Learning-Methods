@@ -6,45 +6,34 @@ from pathlib import Path
 sys.path.append(str(Path(os.path.abspath(__file__)).parent.parent))
 from utils import euc_dis
 
-class Agglomerative:
+class KMeans:
     def __init__(self, k):
         self.k = k
 
-    def get_root(self, i):
-        if self.parent[i] != i:
-            self.parent[i] = self.get_root(self.parent[i])
-        return self.parent[i]
-
-    def fit_predict(self, X):
+    def fit(self, X):
         """
         X is a matrix shaped of [data_size, feature_size]
         """
         data_size, feature_size = X.shape
-        self.cluster_num = data_size
 
-        self.parent = [i for i in range(data_size)]
-        dis = euc_dis(X[:, None, :], X[None, :, :])
-        sorted_a, sorted_b = np.unravel_index(np.argsort(dis, axis=None), dis.shape)
-        for a, b in zip(sorted_a, sorted_b):
-            root_a, root_b = self.get_root(a), self.get_root(b)
-            if root_a != root_b:
-                if root_a > root_b:
-                    root_a, root_b = root_b, root_a
-                self.parent[root_b] = root_a
+        self.centers = X[np.random.choice(data_size, self.k, replace=False)]
+        pre_centers = self.centers - 1
+        while (pre_centers != self.centers).any():
+            pre_centers = self.centers
+            dis = euc_dis(X[:, None, :], self.centers[None, :, :])
+            cluster = dis.argmax(axis=-1)
+            for i in range(self.k):
+                self.centers[i] = X[cluster == i].mean(axis=0)
 
-                self.cluster_num -= 1
-                if self.cluster_num <= self.k:
-                    break
-
-        root = [self.get_root(i) for i in range(data_size)]
-        root_map = {n: i for i, n in enumerate(sorted(list(set(root))))}
-        return [root_map[r] for r in root]
-
+    def predict(self, X):
+        dis = euc_dis(X[:, None, :], self.centers[None, :, :])
+        return dis.argmax(axis=-1)
 
 if __name__ == "__main__":
     def demonstrate(X, k, desc):
-        agglomerative = Agglomerative(k=k)
-        pred = agglomerative.fit_predict(X)
+        k_means = KMeans(k=k)
+        k_means.fit(X)
+        pred = k_means.predict(X)
 
         # plot
         plt.scatter(X[:,0], X[:,1], c=pred, s=20)
