@@ -92,6 +92,43 @@ def one_hot(i, size):
     ans[i] = 1
     return ans
 
+def row_echelon(A):
+    """
+    eliminate a matrix to row echelon form with gaussian elimination
+    """
+    # convert A to row echolon form
+    row_cnt, col_cnt = A.shape
+    col = 0
+    # from top to the bottom
+    for i in range(row_cnt):
+        find = False
+        while not find and col < col_cnt:
+            # look for the first non-zero value in current column
+            for j in range(i, row_cnt):
+                if A[j][col] != 0.:
+                    if i != j:
+                        A[i], A[j] = A[j], A[i]
+                    A[i] /= A[i][col]
+                    find = True
+                    # if non-zero value found, start elimination
+                    for k in range(i + 1, row_cnt):
+                        A[k] -= A[i] * A[k][col]
+                    break
+            # if not found, check the next column
+            else:
+                col += 1
+        col += 1
+    # from bottom to the top
+    for i in range(row_cnt - 1, -1, -1):
+        # find the first non-zero value and eliminate
+        for col in range(col_cnt):
+            if A[i][col] != 0.:
+                # start elimination
+                for k in range(i - 1, -1, -1):
+                    A[k] -= A[i] * A[k][col] / A[i][col]
+                break
+    return A
+
 # ------------------ Decision Trees -------------------------------------------
 def entropy(p):
     s = sum(p)
