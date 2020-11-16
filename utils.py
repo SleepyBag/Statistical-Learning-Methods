@@ -99,6 +99,7 @@ def row_echelon(A):
     # convert A to row echolon form
     row_cnt, col_cnt = A.shape
     col = 0
+    rank = 0
     # from top to the bottom
     for i in range(row_cnt):
         find = False
@@ -107,12 +108,13 @@ def row_echelon(A):
             for j in range(i, row_cnt):
                 if A[j][col] != 0.:
                     if i != j:
-                        A[i], A[j] = A[j], A[i]
+                        A[[i, j]] = A[[j, i]]
                     A[i] /= A[i][col]
                     find = True
                     # if non-zero value found, start elimination
                     for k in range(i + 1, row_cnt):
                         A[k] -= A[i] * A[k][col]
+                    rank += 1
                     break
             # if not found, check the next column
             else:
@@ -127,7 +129,39 @@ def row_echelon(A):
                 for k in range(i - 1, -1, -1):
                     A[k] -= A[i] * A[k][col] / A[i][col]
                 break
-    return A
+    return A[: rank]
+
+def get_solution_domain(A):
+    """
+    get a group of linearly independent solutions of Ax=0, which are normalized
+    the input A is supposed to be in row echelon form
+    """
+    row_cnt, col_cnt = A.shape
+    A = row_echelon(A)
+    col = 0
+    nonzero_cols = []
+    ans = []
+    for i in range(row_cnt):
+        while col != col_cnt and A[i][col] == 0.:
+            ans.append(one_hot(col, col_cnt))
+            for j, j_col in enumerate(nonzero_cols):
+                print(j, j_col)
+                ans[-1][j_col] = -A[j][col]
+            col += 1
+        # record the first nonzero value of each row
+        nonzero_cols.append(col)
+        col += 1
+
+    for col in range(col, col_cnt):
+        ans.append(one_hot(col, col_cnt))
+        for i, j in enumerate(nonzero_cols):
+            ans[-1][j] = -A[i][col]
+    if ans:
+        ans = np.stack(ans)
+        ans /= np.linalg.norm(ans, axis=-1, keepdims=True)
+    else:
+        ans = np.zeros([0, col_cnt])
+    return ans.T
 
 # ------------------ Decision Trees -------------------------------------------
 def entropy(p):
