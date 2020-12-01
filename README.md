@@ -3,7 +3,7 @@ I want to implement all the algorithms introduced by 统计学习方法, 李航
 
 # Feature
 
-- **Detailed**
+- **Detailed**.
 All the algorithms introduced by the book is implemented thoroughly. I try my best not to skip any detail.
 - **Matrix calculation**.
 Strip off `for` loops. Implement most of the algorithms with matrix calculation supported by `numpy`.
