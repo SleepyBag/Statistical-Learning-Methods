@@ -7,8 +7,9 @@ sys.path.append(str(Path(os.path.abspath(__file__)).parent.parent))
 from utils import euc_dis
 
 class KMeans:
-    def __init__(self, k):
+    def __init__(self, k, max_iterations=1000):
         self.k = k
+        self.max_iterations = max_iterations
 
     def fit(self, X):
         """
@@ -18,12 +19,16 @@ class KMeans:
 
         self.centers = X[np.random.choice(data_size, self.k, replace=False)]
         pre_centers = self.centers - 1
+        step = 0
         while (pre_centers != self.centers).any():
-            pre_centers = self.centers
+            pre_centers = self.centers.copy()
             dis = euc_dis(X[:, None, :], self.centers[None, :, :])
             cluster = dis.argmax(axis=-1)
             for i in range(self.k):
                 self.centers[i] = X[cluster == i].mean(axis=0)
+            step += 1
+            if step == self.max_iterations:
+                break
 
     def predict(self, X):
         dis = euc_dis(X[:, None, :], self.centers[None, :, :])
