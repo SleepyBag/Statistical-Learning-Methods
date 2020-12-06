@@ -3,11 +3,11 @@ from matplotlib import pyplot as plt
 from scipy.stats import gaussian_kde
 
 
-def gaussian_kernel(x, j, xj_new):
-    return np.exp(-(x[j] - xj_new) ** 2)
+def gaussian_kernel(x1, x2):
+    return np.exp(-((x1 - x2) ** 2).sum())
 
-def gaussian_sampler(x, j):
-    return np.random.normal(x[j])
+def gaussian_sampler(x):
+    return np.random.normal(x)
 
 def single_component_metropolis_hasting(dim, p, q=gaussian_kernel, q_sampler=gaussian_sampler, x0=None, burning_steps=1000, max_steps=10000, epsilon=1e-8, verbose=False):
     """
@@ -15,29 +15,22 @@ def single_component_metropolis_hasting(dim, p, q=gaussian_kernel, q_sampler=gau
     and the recommended distribution q,
     return a list of samples x ~ p,
     where the number of samples is max_steps - burning_steps.
-    q_sampler is a function taking an (x, j) as input and return a sample of q(xj_new | xj_old, old_x_without_xj)
-    q is a distribution function representing q(xj_new, xj_old | old_x_without_xj).
-    q takes (x, j, xj_new) as parameters,
-    where x is the variable last step,
-    j is index of the the parameter chosen to be updated,
-    xj_new is the new value of x_j.
-    x0 is the initial value of x. If not specified, it's set as zero vector.
+    q_sampler is a function taking an x as input and return a sample of q(x_new | x_old).
+    q is a distribution function representing q(x_new | x_old).
+    q takes (x_old, x_new) as parameters.
     """
     x = np.zeros(dim)
     samples = np.zeros([max_steps - burning_steps, dim])
     # Burning
     for i in range(max_steps):
-        for j in range(dim):
-            xj_new = q_sampler(x, j)
-            x_new = x.copy()
-            x_new[j] = xj_new
-            accept_prob = (p(x_new) + epsilon) / (p(x) + epsilon) * q(x, j, xj_new) / q(x_new, j, x[j])
-            if verbose:
-                print("New value of x is", x_new)
-            if np.random.random() < accept_prob:
-                x = x_new
-            elif verbose:
-                print("New value is dropped")
+        x_new = q_sampler(x)
+        accept_prob = (p(x_new) + epsilon) / (p(x) + epsilon) * q(x, x_new) / q(x_new, x)
+        if verbose:
+            print("New value of x is", x_new)
+        if np.random.random() < accept_prob:
+            x = x_new
+        elif verbose:
+            print("New value is dropped")
         if i >= burning_steps:
             samples[i - burning_steps] = x
     return samples
