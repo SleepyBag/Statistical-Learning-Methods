@@ -9,7 +9,7 @@ def gaussian_kernel(x1, x2):
 def gaussian_sampler(x):
     return np.random.normal(x)
 
-def single_component_metropolis_hasting(dim, p, q=gaussian_kernel, q_sampler=gaussian_sampler, x0=None, burning_steps=1000, max_steps=10000, epsilon=1e-8, verbose=False):
+def metropolis_hasting(dim, p, q=gaussian_kernel, q_sampler=gaussian_sampler, x0=None, burning_steps=1000, max_steps=10000, epsilon=1e-8, verbose=False):
     """
     Given a distribution function p (it doesn't need to be a probability, a likelihood function is enough),
     and the recommended distribution q,
@@ -19,9 +19,8 @@ def single_component_metropolis_hasting(dim, p, q=gaussian_kernel, q_sampler=gau
     q is a distribution function representing q(x_new | x_old).
     q takes (x_old, x_new) as parameters.
     """
-    x = np.zeros(dim)
+    x = np.zeros(dim) if x0 is None else x0
     samples = np.zeros([max_steps - burning_steps, dim])
-    # Burning
     for i in range(max_steps):
         x_new = q_sampler(x)
         accept_prob = (p(x_new) + epsilon) / (p(x) + epsilon) * q(x, x_new) / q(x_new, x)
@@ -38,10 +37,11 @@ def single_component_metropolis_hasting(dim, p, q=gaussian_kernel, q_sampler=gau
 
 if __name__ == '__main__':
     def demonstrate(dim, p, desc, **args):
-        samples = single_component_metropolis_hasting(dim, p, **args)
+        samples = metropolis_hasting(dim, p, **args)
         z = gaussian_kde(samples.T)(samples.T)
         plt.scatter(samples[:, 0], samples[:, 1], c=z, marker='.')
         plt.plot(samples[: 100, 0], samples[: 100, 1], 'r-')
+        plt.title(desc)
         plt.show()
 
     # example 1:

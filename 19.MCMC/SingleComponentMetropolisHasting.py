@@ -23,10 +23,9 @@ def single_component_metropolis_hasting(dim, p, q=gaussian_kernel, q_sampler=gau
     xj_new is the new value of x_j.
     x0 is the initial value of x. If not specified, it's set as zero vector.
     """
-    x = np.zeros(dim)
+    x = np.zeros(dim) if x0 is None else x0
     samples = np.zeros([max_steps - burning_steps, dim])
-    # Burning
-    for i in range(max_steps):
+    or i in range(max_steps):
         for j in range(dim):
             xj_new = q_sampler(x, j)
             x_new = x.copy()
@@ -49,6 +48,7 @@ if __name__ == '__main__':
         z = gaussian_kde(samples.T)(samples.T)
         plt.scatter(samples[:, 0], samples[:, 1], c=z, marker='.')
         plt.plot(samples[: 100, 0], samples[: 100, 1], 'r-')
+        plt.title(desc)
         plt.show()
 
     # example 1:
