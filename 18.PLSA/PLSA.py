@@ -38,8 +38,9 @@ if __name__ == '__main__':
         print(np.round(p_topic_when_text, 2))
         print("The probabilities of each word for each topic are")
         print(np.round(p_word_when_topic, 2))
-        print("The recovered word-text matrix is")
+        print("The recovered text-wordcnt matrix is")
         print(np.round((p_topic_when_text @ p_word_when_topic).T, 2))
+        print()
 
     X = np.array([
         [0, 0, 1, 1, 0, 0, 0, 0, 0],
@@ -69,4 +70,4 @@ if __name__ == '__main__':
         [1, 0, 1, 0, 0, 0, 0, 1, 0],
         [0, 0, 0, 1, 1, 0, 0, 0, 0],
     ]).astype(float)
-    demonstrate(X, max(X.shape), 'Example 2')
+    demonstrate(X, max(X.shape), 'Example 2: You can recogonize the original matrix from the recovered one if k is large enough')
