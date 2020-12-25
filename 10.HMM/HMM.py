@@ -20,10 +20,16 @@ class HMM:
         self.epsilon = epsilon
 
     def fit(self, X):
+        """
+        When there is no label in the training data,
+        HMM uses baum-welch for training.
+        Otherwise just counting the probability will be fine (not implemented here)
+        """
         self.state2state, self.state2observation, self.initial_state = \
             baum_welch(X, self.state_size, self.observation_size, self.epsilon, self.max_iteration)
 
     def predict(self, X):
+        """HMM uses viterbi for predicting"""
         Y = np.zeros_like(X)
         Y = np.apply_along_axis(
             partial(viterbi, self.state2state, self.state2observation, self.initial_state), -1, X)
