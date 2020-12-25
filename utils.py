@@ -86,6 +86,14 @@ def line_search(f, l, r, epsilon=1e-6):
             fll, frr = None, None
     return (l + r) / 2
 
+def newton(f, x0, epsilon=1e-6):
+    """Find the fixed point wehre f(x) = x of function f"""
+    prex = x0
+    x = f(x0)
+    while abs(x - prex) > epsilon:
+        prex, x = x, f(x)
+    return x
+
 def one_hot(i, size):
     """Given a hot number the tensor size, return the one-hot tensor"""
     ans = np.zeros(size)
