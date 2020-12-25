@@ -37,7 +37,7 @@ class HMM:
 
 
 if __name__ == '__main__':
-    def demonstrate(X, Y, desc):
+    def demonstrate(X, testX, desc):
         console = Console(markup=False)
 
         vocab = set(X.flatten())
@@ -46,17 +46,17 @@ if __name__ == '__main__':
 
         f_word2num = np.vectorize(lambda word: word2num[word])
 
-        numX, numY = map(f_word2num, (X, Y))
+        numX, num_testX = map(f_word2num, (X, testX))
 
         hmm = HMM(4, vocab_size)
         hmm.fit(numX)
-        pred = hmm.predict(numY)
+        pred = hmm.predict(num_testX)
 
         # show in table
         print(desc)
         table = Table()
-        for y, p in zip(Y, pred):
-            table.add_row(*map(str, y))
+        for x, p in zip(testX, pred):
+            table.add_row(*map(str, x))
             table.add_row(*map(str, p))
         console.print(table)
 
@@ -71,14 +71,14 @@ if __name__ == '__main__':
                    'it is bad .',
                    ]
                   ])
-    Y = X
-    demonstrate(X, Y, "Example 1")
+    testX = X
+    demonstrate(X, testX, "Example 1")
 
     # ---------------------- Example 2 --------------------------------------------
-    Y = np.array([s.split() for s in
+    testX = np.array([s.split() for s in
                   ['you is good .',
                    'i are bad .',
                    'it are good .']
                   ])
-    Y = np.concatenate([X, Y])
-    demonstrate(X, Y, "Example 2")
+    testX = np.concatenate([X, testX])
+    demonstrate(X, testX, "Example 2")
