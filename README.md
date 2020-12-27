@@ -1,4 +1,4 @@
-# Statistical-Learning-Method（中文文档请往下翻）
+# Statistical-Learning-Methods（中文文档请往下翻）
 I want to implement all the algorithms introduced by 统计学习方法, 李航
 
 ## Feature
