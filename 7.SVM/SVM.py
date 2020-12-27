@@ -184,13 +184,13 @@ if __name__ == "__main__":
     print(X, Y)
     demonstrate(X, Y, "Example 2: randomly generated data")
 
-    # ---------------------- Example 3---------------------------------------------
+    # ---------------------- Example 3 --------------------------------------------
     print("Example 3:")
     X = np.array([[0, 0], [1, 1], [1, 0], [0, 1]])
     Y = np.array([1, 1, -1, -1])
     demonstrate(X, Y, "Example 3: SVM with dot kernel cannot sovle XOR problem", C=1)
 
-    # ---------------------- Example 4---------------------------------------------
+    # ---------------------- Example 4 --------------------------------------------
     def gaussian_kernel(x, y):
         return np.exp(-((x - y) ** 2).sum())
     print("Example 4:")
