@@ -86,12 +86,15 @@ def line_search(f, l, r, epsilon=1e-6):
             fll, frr = None, None
     return (l + r) / 2
 
-def newton(f, x0, epsilon=1e-6):
-    """Find the fixed point wehre f(x) = x of function f"""
+def newton(f, g, x0, epsilon=1e-6):
+    """
+    Find the zero point wehre f(x) = 0 of function f
+    g(x) is the gradient function of f
+    """
     prex = x0
-    x = f(x0)
+    x = x0 - f(x0) / g(x0)
     while abs(x - prex) > epsilon:
-        prex, x = x, f(x)
+        prex, x = x, x - f(x) / g(x)
     return x
 
 def one_hot(i, size):
