@@ -1,5 +1,6 @@
 # Statistical-Learning-Methods（中文文档请往下翻）
-I want to implement all the algorithms introduced by 统计学习方法, 李航
+
+Implement all the algorithms introduced by _Statistical Learning Methods_, Li Hang.
 
 ## Feature
 
@@ -28,6 +29,8 @@ Just run any single file located in each chapter. You will see examples of the a
 ---
 
 # 统计学习方法
+
+李航博士《统计学习方法》一书的**硬核** Python 实现。
 
 ## 项目特色
 
