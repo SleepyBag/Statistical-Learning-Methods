@@ -178,7 +178,7 @@ def get_solution_domain(A):
 def entropy(p):
     s = sum(p)
     p = [i / s for i in p]
-    ans = sum(-i * log(i) for i in p)
+    ans = sum(-i * log(i, 2) for i in p)
     return ans
 
 def entropy_of_split(X, Y, col):
