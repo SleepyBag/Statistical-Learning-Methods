@@ -40,7 +40,7 @@ class C45:
             col_ind, best_information_gain_ratio = argmax(left_columns, key=lambda col: information_gain_ratio(X, Y, col))
             col = left_columns[col_ind]
             # if this split is better than not splitting
-            if best_information_gain_ratio >= self.information_gain_threshold:
+            if best_information_gain_ratio > self.information_gain_threshold:
                 print(f"Split by {col}th column")
                 split = True
                 cur.col = col

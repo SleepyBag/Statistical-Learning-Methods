@@ -42,7 +42,7 @@ class ID3:
                                                     key=lambda col: information_gain(X, Y, col))
             col = left_columns[col_ind]
             # if this split is better than not splitting
-            if best_information_gain >= self.information_gain_threshold:
+            if best_information_gain > self.information_gain_threshold:
                 print(f"Split by {col}th column")
                 split = True
                 cur.col = col
