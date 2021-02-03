@@ -14,13 +14,8 @@ class ID3:
         def __init__(self, col, Y):
             self.col = col
             self.children = {}
-            self.prob = Counter(Y)
-            s = sum(self.prob.values())
-            for y in self.prob:
-                self.prob[y] /= s
-            label_ind, self.label_prob = argmax(self.prob.keys(),
-                                                key=self.prob.__getitem__)
-            self.label = Y[label_ind]
+            self.cnt = Counter(Y)
+            self.label = self.cnt.most_common(1)[0][0]
 
     def __init__(self, information_gain_threshold=0., verbose=False):
         self.information_gain_threshold = information_gain_threshold
