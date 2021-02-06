@@ -68,7 +68,7 @@ class ID3:
 
 if __name__ == "__main__":
     console = Console(markup=False)
-    id3 = ID3(verbose=True)
+    id3 = ID3(verbose=False)
     # -------------------------- Example 1 ----------------------------------------
     # unpruned decision tree predict correctly for all training data
     print("Example 1:")
