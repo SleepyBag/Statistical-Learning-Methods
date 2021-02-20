@@ -24,15 +24,15 @@ class RegressionCART:
         self.verbose = verbose
         self.max_depth = max_depth
 
-    def get_se_of_split(self, Y1, Y2):
+    def get_se(self, Y_cnt):
+        """get square error given the count of each Y value"""
+        mean = sum(y * Y_cnt[y] for y in Y_cnt) / sum(Y_cnt.values())
+        square_error = sum((y - mean) ** 2 * Y_cnt[y] for y in Y_cnt)
+        return square_error
+
+    def get_se_of_split(self, Y1_cnt, Y2_cnt):
         """get the square error of a split"""
-        # Assume that we assign each a certain label to the two set,
-        # the best assignment is the mean value of each set
-        center1 = Y1.mean()
-        center2 = Y2.mean()
-        square_error1 = ((Y1 - center1) ** 2).sum()
-        square_error2 = ((Y2 - center2) ** 2).sum()
-        return square_error1 + square_error2
+        return self.get_se(Y1_cnt) + self.get_se(Y2_cnt)
 
     def build(self, X, Y, depth=1):
         cur = self.Node(None, Y)
@@ -47,17 +47,21 @@ class RegressionCART:
         # i.e., there are different labels
         if depth < self.max_depth and len(set(Y)) > 1:
             for col in range(len(X[0])):
-                for val in X[:, col]:
-                    # Don't split by the minimal value
-                    # because no value is smaller than it
-                    # so the left part is empty
-                    if val != X[:, col].max():
-                        smaller_ind = X[:, col] <= val
-                        larger_ind = X[:, col] > val
-                        smaller_Y = Y[smaller_ind]
-                        larger_Y = Y[larger_ind]
-                        se = self.get_se_of_split(smaller_Y, larger_Y)
+                smaller_Y_cnt = Counter()
+                larger_Y_cnt = Counter(Y)
+                sorted_inds = np.argsort(X[:, col])
+                # try all the possible split values
+                for i, ind in enumerate(sorted_inds):
+                    smaller_Y_cnt[Y[ind]] += 1
+                    larger_Y_cnt[Y[ind]] -= 1
+                    # don't split on the largest number, otherwise the right part is empty
+                    if sorted_inds[i] == sorted_inds[-1]:
+                        break
+                    # split only when this is the last one of consequent identical numbers
+                    if i == len(X) - 1 or X[ind, col] != X[sorted_inds[i + 1], col]:
+                        se = self.get_se_of_split(smaller_Y_cnt, larger_Y_cnt)
                         if se < best_se:
+                            val = X[ind, col]
                             best_se, best_col, best_val = se, col, val
 
             # Build left and right child nodes recursively
@@ -78,15 +82,15 @@ class RegressionCART:
             print("No split")
         return cur
 
-    def _query_leaf(self, root, x):
+    def _query(self, root, x):
         if root.col is None:
             return root
         elif x[root.col] > root.val:
-            return self._query_leaf(root.right, x)
-        return self._query_leaf(root.left, x)
+            return self._query(root.right, x)
+        return self._query(root.left, x)
 
     def query(self, root, x):
-        return self._query_leaf(root, x).label
+        return self._query(root, x).label
 
     def fit(self, X, Y):
         self.root = self.build(X, Y)
