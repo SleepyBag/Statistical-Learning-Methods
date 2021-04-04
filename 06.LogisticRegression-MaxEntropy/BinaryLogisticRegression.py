@@ -35,8 +35,8 @@ class LogisticRegression:
             gradient_w = gradient_w.mean(axis=0)
             self.w += gradient_w
             self.b += gradient_b
-            loss = binary_cross_entropy(pred, Y)
             if self.verbose:
+                loss = binary_cross_entropy(pred, Y)
                 print(f"Step {step}, Loss is {loss}...")
 
     def _predict(self, X):
