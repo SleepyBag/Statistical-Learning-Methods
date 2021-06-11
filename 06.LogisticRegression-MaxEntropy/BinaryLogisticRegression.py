@@ -7,7 +7,7 @@ sys.path.append(str(Path(os.path.abspath(__file__)).parent.parent))
 from utils import binary_cross_entropy, sigmoid, wbline
 
 class LogisticRegression:
-    def __init__(self, lr=1e-4, max_steps=1000, verbose=True):
+    def __init__(self, lr=1, max_steps=1000, verbose=True):
         self.lr = lr
         self.max_steps = max_steps
         self.verbose = verbose
@@ -33,8 +33,8 @@ class LogisticRegression:
             # get mean of gradient across all data
             gradient_b = gradient_b.mean(axis=0)
             gradient_w = gradient_w.mean(axis=0)
-            self.w += gradient_w
-            self.b += gradient_b
+            self.w += gradient_w * self.lr
+            self.b += gradient_b * self.lr
             if self.verbose:
                 loss = binary_cross_entropy(pred, Y)
                 print(f"Step {step}, Loss is {loss}...")
