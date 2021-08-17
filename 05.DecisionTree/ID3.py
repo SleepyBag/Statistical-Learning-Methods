@@ -38,7 +38,8 @@ class ID3:
             col = left_columns[col_ind]
             # if this split is better than not splitting
             if best_information_gain > self.information_gain_threshold:
-                print(f"Split by {col}th column")
+                if self.verbose:
+                    print(f"Split by {col}th column")
                 split = True
                 cur.col = col
                 for val in set(x[col] for x in X):
@@ -46,7 +47,7 @@ class ID3:
                     child_X = [x for i, x in zip(ind, X) if i]
                     child_Y = [y for i, y in zip(ind, Y) if i]
                     cur.children[val] = self.build(child_X, child_Y, selected | {col})
-        if not split:
+        if not split and self.verbose:
             print("No split")
         return cur
 
