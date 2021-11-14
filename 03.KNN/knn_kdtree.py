@@ -37,33 +37,28 @@ class KDTree:
 
     def _query(self, root, x, k):
         if not root:
-            return Heap(max_len=k, key=lambda xy: -euc_dis(x, xy[0])), inf
-        mindis = inf
+            return Heap(max_len=k, key=lambda xy: euc_dis(x, xy[0]))
         # Find the region that contains the target point
         if x[root.axis] <= root.points[0][root.axis]:
-            ans, lmindis = self._query(root.left, x, k)
-            mindis = min(mindis, lmindis)
+            ans = self._query(root.left, x, k)
             sibling = root.right
         else:
-            ans, rmindis = self._query(root.right, x, k)
-            mindis = min(mindis, rmindis)
+            ans = self._query(root.right, x, k)
             sibling = root.left
         # All the points on the current splitting line are possible answers
         for curx, cury in zip(root.points, root.labels):
-            mindis = min(euc_dis(curx, x), mindis)
             ans.push((curx, cury))
         # If the distance between the target point and the splitting line is
-        # shorter than the best answer up until, find the other tree
-        if mindis > abs(x[root.axis] - root.points[0][root.axis]):
-            other_ans, other_mindis = self._query(sibling, x, k)
-            mindis = min(mindis, other_mindis)
+        # shorter than the best answer up until, find in the other tree
+        if len(ans) < k or ans.max_key() > abs(x[root.axis] - root.points[0][root.axis]):
+            other_ans = self._query(sibling, x, k)
             while other_ans:
                 otherx, othery = other_ans.pop()
                 ans.push((otherx, othery))
-        return ans, mindis
+        return ans
 
     def query(self, x, k):
-        return self._query(self.root, x, k)[0]
+        return self._query(self.root, x, k)
 
     def __init__(self, X, Y):
         self.root = self.build(X, Y)
