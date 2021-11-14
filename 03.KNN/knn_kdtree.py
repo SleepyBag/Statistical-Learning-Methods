@@ -37,7 +37,7 @@ class KDTree:
 
     def _query(self, root, x, k):
         if not root:
-            return Heap(max_len=k, key=lambda xy: euc_dis(x, xy[0]))
+            return Heap(max_len=k, key=lambda xy: -euc_dis(x, xy[0]))
         # Find the region that contains the target point
         if x[root.axis] <= root.points[0][root.axis]:
             ans = self._query(root.left, x, k)
@@ -50,7 +50,7 @@ class KDTree:
             ans.push((curx, cury))
         # If the distance between the target point and the splitting line is
         # shorter than the best answer up until, find in the other tree
-        if len(ans) < k or ans.max_key() > abs(x[root.axis] - root.points[0][root.axis]):
+        if len(ans) < k or -ans.top_key() > abs(x[root.axis] - root.points[0][root.axis]):
             other_ans = self._query(sibling, x, k)
             while other_ans:
                 otherx, othery = other_ans.pop()
