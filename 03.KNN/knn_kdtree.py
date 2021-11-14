@@ -22,7 +22,7 @@ class KDTree:
     def build(self, X, Y, split_axis=0):
         if not len(X):
             return None
-        median_ind = np.argpartition(X[:, split_axis], len(X) // 2, axis=0)[-1]
+        median_ind = np.argpartition(X[:, split_axis], len(X) // 2, axis=0)[len(X) // 2]
         split_point = float(X[median_ind, split_axis])
         equal_x = X[X[:, split_axis] == split_point]
         equal_y = Y[X[:, split_axis] == split_point]
