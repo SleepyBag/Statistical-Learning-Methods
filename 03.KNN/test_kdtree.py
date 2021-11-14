@@ -19,3 +19,13 @@ assert(points_equal(tree.root.right.left.points, [[3, 1]]))
 assert(points_equal(tree.root.right.right.points, [[3, 3]]))
 
 assert(points_equal([a[0] for a in tree.query(np.array([2, 1]), 3)], [[1, 1], [2, 2], [3, 1]]))
+
+X = np.array([[0, 0], [1, 1], [2, 2]])
+Y = np.array([0] * len(X))
+tree = knn_kdtree.KDTree(X, Y)
+assert(points_equal([a[0] for a in tree.query(np.array([1, 1]), 3)], X))
+
+X = np.array([[0, 0], [1, 1], [2, 2]])
+Y = np.array([0] * len(X))
+tree = knn_kdtree.KDTree(X, Y)
+assert(points_equal([a[0] for a in tree.query(np.array([10, 2.001]), 3)], X))
