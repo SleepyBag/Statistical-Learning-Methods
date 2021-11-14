@@ -38,6 +38,9 @@ class Heap:
     def top(self):
         return self.h[0][-1]
 
+    def top_key(self):
+        return self.h[0][0]
+
     def pop(self):
         return heapq.heappop(self.h)[-1]
 
