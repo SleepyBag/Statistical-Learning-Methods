@@ -2,10 +2,12 @@ import numpy as np
 from matplotlib import pyplot as plt
 
 class GMM:
-    def __init__(self, k, max_step=2000):
+    def __init__(self, k, independent_variance=True, max_step=2000):
         self.k = k
         self.max_step = max_step
         self.epsilon = 1e-8
+        # specify whether each feature has independent variance - that is, has a diagnol covariance matrix
+        self.independent_variance = independent_variance
 
     def fit(self, X):
         """
@@ -15,20 +17,40 @@ class GMM:
         # the parameter of each gaussian distribution
         self.prior = np.ones(self.k) / self.k
         self.prior /= self.prior.sum()
-        self.std = np.repeat(np.std(X, axis=0, keepdims=True), self.k, axis=0)
-        self.mean = np.random.normal(X.mean(axis=0), self.std, [self.k, feature_size])
+        if self.independent_variance:
+            self.std = np.repeat(np.std(X, axis=0, keepdims=True), self.k, axis=0)
+            self.mean = np.random.normal(X.mean(axis=0), self.std, [self.k, feature_size])
+        else:
+            self.cov = np.repeat(np.cov(X.T)[None, ...], self.k, axis=0)
+            self.mean = np.random.multivariate_normal(X.mean(axis=0), self.cov[0], [self.k])
 
         pre_likelihood = np.zeros([self.k, n])
         for step in range(self.max_step):
             # Expectation step
+
+            # posterior probability of each sample in each Gaussian model
             posterior = self.predict(X)
 
             # Maximization step
+            # center of each Gaussian model
             self.mean = (posterior[:, :, None] * X[None, :, :]).sum(axis=1) / \
                 (posterior.sum(axis=1)[:, None] + self.epsilon)
-            var = (posterior[:, :, None] * (X[None, :, :] - self.mean[:, None, :]) ** 2).sum(axis=1) / \
-                (posterior.sum(axis=1)[:, None] + self.epsilon)
-            self.std = np.sqrt(var)
+            # distance from each sample to each center
+            dis = X[None, :, :] - self.mean[:, None, :]
+            if self.independent_variance:
+                # variance of each Gaussian model
+                var = (posterior[:, :, None] * dis ** 2).sum(axis=1) / \
+                    (posterior.sum(axis=1)[:, None] + self.epsilon)
+                # standard deviation of each Gaussian model, in each dimension
+                # shape [k, feature_size]
+                # std[i, j] is the variance of j-th feature in the i-th Gaussian model
+                self.std = np.sqrt(var)
+            else:
+                # covariance of each Gaussian model
+                # shape [k, feature_size, feature_size]
+                # cov[i] is the covariance matrix of i-th Gaussian model
+                self.cov =  (dis.transpose(0, 2, 1) @ (posterior[:, :, None] * dis)) / \
+                    (posterior.sum(axis=1)[:, None, None] + self.epsilon)
             self.prior = posterior.sum(axis=1)
             self.prior /= (self.prior.sum() + self.epsilon)
 
@@ -38,12 +60,24 @@ class GMM:
 
     def predict(self, X):
         """return the probability of each x belonging to each gaussian distribution"""
+        # dis[i, j, k] is the distance from i-th center to j-th sample, in k-th dimension
         dis = X[None, :, :] - self.mean[:, None, :]
-        # likelihook is of shape [k, n, feature_size]
-        log_likelihood = -dis ** 2 / 2 / (self.std[:, None, :] ** 2 + self.epsilon) \
-            - np.log(np.sqrt(2 * np.pi) + self.epsilon) - np.log(self.std[:, None, :] + self.epsilon)
-        log_likelihood = log_likelihood.sum(-1)
-        # reduce likelihood to shape [k, n]
+
+        # calculate log likelihood first, then likelihood
+        if self.independent_variance:
+            # log_likelihook is of shape [k, n, feature_size]
+            log_likelihood = -dis ** 2 * .5 / (self.std[:, None, :] ** 2 + self.epsilon) \
+                - np.log(np.sqrt(2 * np.pi) + self.epsilon) - np.log(self.std[:, None, :] + self.epsilon)
+            # reduce likelihood to shape [k, n]
+            # log_likelihood[i, j] is the likelihood of j-th sample belonging to i-th center
+            log_likelihood = log_likelihood.sum(-1)
+        else:
+            ## FIXME: cov could be a singular matrix which is inversible
+            # log_likelihook is of shape [k, n]
+            # log_likelihood[i, j] is the likelihood of j-th sample belonging to i-th center
+            log_likelihood = -.5 * (dis @ np.linalg.inv(self.cov) * dis).sum(axis=-1) \
+                -.5 * np.linalg.slogdet(2 * np.pi * self.cov + self.epsilon)[1][:, None]                            # slogdet returns [sign, logdet], we just need logdet
+
         likelihood = np.exp(log_likelihood)
         self.likelihood = likelihood
         # the posterior of each datium belonging to a distribution, of shape [k, n]
@@ -54,7 +88,7 @@ class GMM:
 
 if __name__ == '__main__':
     def demonstrate(desc, X):
-        gmm = GMM(3)
+        gmm = GMM(3, independent_variance=False)
         gmm.fit(X)
         pred = gmm.predict(X).T
         plt.scatter(X[:, 0], X[:, 1], color=pred)
