@@ -13,25 +13,28 @@ class GMM:
         """
         X: training data of shape [n, feature_size]
         """
-        n, feature_size = X.shape
+        n, self.feature_size = X.shape
         # the parameter of each gaussian distribution
         self.prior = np.ones(self.k) / self.k
         self.prior /= self.prior.sum()
         if self.independent_variance:
             self.std = np.repeat(np.std(X, axis=0, keepdims=True), self.k, axis=0)
-            self.mean = np.random.normal(X.mean(axis=0), self.std, [self.k, feature_size])
+            self.mean = np.random.normal(X.mean(axis=0), self.std, [self.k, self.feature_size])
         else:
             self.cov = np.repeat(np.cov(X.T)[None, ...], self.k, axis=0)
             self.mean = np.random.multivariate_normal(X.mean(axis=0), self.cov[0], [self.k])
 
         pre_likelihood = np.zeros([self.k, n])
         for step in range(self.max_step):
+            ##########################################
             # Expectation step
-
+            ##########################################
             # posterior probability of each sample in each Gaussian model
             posterior = self.predict(X)
 
+            ##########################################
             # Maximization step
+            ##########################################
             # center of each Gaussian model
             self.mean = (posterior[:, :, None] * X[None, :, :]).sum(axis=1) / \
                 (posterior.sum(axis=1)[:, None] + self.epsilon)
@@ -72,11 +75,11 @@ class GMM:
             # log_likelihood[i, j] is the likelihood of j-th sample belonging to i-th center
             log_likelihood = log_likelihood.sum(-1)
         else:
-            ## FIXME: cov could be a singular matrix which is inversible
             # log_likelihook is of shape [k, n]
             # log_likelihood[i, j] is the likelihood of j-th sample belonging to i-th center
-            log_likelihood = -.5 * (dis @ np.linalg.inv(self.cov) * dis).sum(axis=-1) \
-                -.5 * np.linalg.slogdet(2 * np.pi * self.cov + self.epsilon)[1][:, None]                            # slogdet returns [sign, logdet], we just need logdet
+            fixed_cov = self.cov + self.epsilon * np.eye(self.feature_size)
+            log_likelihood = -.5 * (dis @ np.linalg.inv(fixed_cov) * dis).sum(axis=-1) \
+                -.5 * np.linalg.slogdet(2 * np.pi * fixed_cov)[1][:, None]                            # slogdet returns [sign, logdet], we just need logdet
 
         likelihood = np.exp(log_likelihood)
         self.likelihood = likelihood
