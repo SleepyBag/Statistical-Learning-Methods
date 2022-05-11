@@ -20,7 +20,6 @@ class KMeans:
         data_size, feature_size = X.shape
 
         self.centers = X[np.random.choice(data_size, self.k, replace=False)]
-        self.centers = np.array([[0, 7], [-2, -3]]).astype(float)
         pre_centers = self.centers - 1
         step = 0
         if self.verbose:
