@@ -13,24 +13,23 @@ from ClassificationCART import ClassificationCART
 class PrunedCART:
     def __init__(self, cart, X, Y, val_X, val_Y, verbose=True):
         self.root = cart.root
-        self.possible_alpha = {np.inf}
+        self.possible_prune_threshold = {np.inf}
         self.verbose = verbose
         self.prune(self.root, X, Y)
         if self.verbose:
-            print("All the possible alpha values are", self.possible_alpha)
-        self.alpha = self.choose_alpha(val_X, val_Y, self.possible_alpha)
+            print("All the possible threshold values are", self.possible_prune_threshold)
+        self.prune_threshold = self.choose_threshold(val_X, val_Y, self.possible_prune_threshold)
         if self.verbose:
-            print("The best alpha value is", self.alpha)
+            print("The best threshold value is", self.prune_threshold)
 
     def prune(self, root, X, Y):
         """
-        prune a classification CART recursively. alpha is the weight of tree size in the loss function
-        tag all the nodes with a float alpha
-        meaning that if the weight of size of tree in the loss function is larger than alpha,
+        prune a classification CART recursively
+        tag all the nodes with a float `pruned_loss`, which indicating the loss of pruning the branches under this node
         this node will be trimmed
 
-        possible_alpha is a empty set, in which this function will insert all the possible alpha value.
-        reutrn the loss of all the leaf nodes, and the size of the subtree
+        possible_prune_threshold is a empty set, in which this function will insert all the possible threshold value.
+        return the loss of all the leaf nodes, and the size of the subtree
         """
         # calculate the gini index of this subtree if the children of root is trimmed
         pruned_gini = len(X) * gini(Counter(Y).values())
@@ -61,54 +60,52 @@ class PrunedCART:
         cur_loss += child_loss
         size += child_size
 
-        # alpha means that
-        # if the weight of size of tree in the loss function is larger than alpha,
-        # this node will be trimmed
-        alpha = (pruned_loss - cur_loss) / (size - 1)
-        root.alpha = alpha
-        self.possible_alpha.add(alpha)
+        # the loss of prune the branches of this node
+        relative_prune_loss = (pruned_loss - cur_loss) / (size - 1)
+        root.relative_prune_loss = relative_prune_loss
+        self.possible_prune_threshold.add(relative_prune_loss)
         return cur_loss, size
 
-    def query(self, root, x, alpha):
-        # if root.alpha is less than choosed alpha, it is trimmed
-        if root.col is None or root.alpha < alpha:
+    def query(self, root, x, prune_threshold):
+        # if root.relative_prune_loss is less than choosed prune threshold, it is trimmed
+        if root.col is None or root.relative_prune_loss < prune_threshold:
             return root.label
         elif x[root.col] != root.val:
-            return self.query(root.right, x, alpha)
-        return self.query(root.left, x, alpha)
+            return self.query(root.right, x, prune_threshold)
+        return self.query(root.left, x, prune_threshold)
 
-    def _predict(self, x, alpha):
-        return self.query(self.root, x, alpha)
+    def _predict(self, x, prune_threshold):
+        return self.query(self.root, x, prune_threshold)
 
-    def predict(self, X, alpha=None):
-        if alpha is None:
-            alpha = self.alpha
-        return np.array([self._predict(x, alpha) for x in X])
+    def predict(self, X, prune_threshold=None):
+        if prune_threshold is None:
+            prune_threshold = self.prune_threshold
+        return np.array([self._predict(x, prune_threshold) for x in X])
 
-    def validate(self, val_X, val_Y, alpha):
+    def validate(self, val_X, val_Y, prune_threshold):
         """
         I don't think using gini index for validation, as written in the book, is a good idea,
         beacause gini index is unsupervised but there is label available in the validation set.
         So I choose to use accuracy instead.
         """
-        pred = self.predict(val_X, alpha)
+        pred = self.predict(val_X, prune_threshold)
         return (pred == val_Y).mean()
 
-    def choose_alpha(self, val_X, val_Y, possible_alpha):
+    def choose_threshold(self, val_X, val_Y, possible_prune_threshold):
         """
         Choose the best subtree according to the validation set.
         Cross-validation here simply refers to predict on a pre-split validation set.
         """
         best_acc = -1.
-        best_alpha = 0.
-        for alpha in sorted(list(possible_alpha)):
-            cur_acc = self.validate(val_X, val_Y, alpha)
+        best_prune_threshold = 0.
+        for prune_threshold in sorted(list(possible_prune_threshold)):
+            cur_acc = self.validate(val_X, val_Y, prune_threshold)
             if self.verbose:
-                print(f"When alpha = {alpha}, accuracy is {cur_acc}")
+                print(f"When prune threshold = {prune_threshold}, accuracy is {cur_acc}")
             if cur_acc >= best_acc:
                 best_acc = cur_acc
-                best_alpha = alpha
-        return best_alpha
+                best_prune_threshold = prune_threshold
+        return best_prune_threshold
 
 
 if __name__ == "__main__":
