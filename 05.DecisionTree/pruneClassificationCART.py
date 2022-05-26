@@ -15,16 +15,18 @@ class PrunedCART:
         self.root = cart.root
         self.possible_prune_threshold = {np.inf}
         self.verbose = verbose
-        self.prune(self.root, X, Y)
+        # Stage one: calculate pruning loss for all nodes
+        self.calculate_prune_loss(self.root, X, Y)
         if self.verbose:
             print("All the possible threshold values are", self.possible_prune_threshold)
+        # Stage two: choose the best threshold for pruning
         self.prune_threshold = self.choose_threshold(val_X, val_Y, self.possible_prune_threshold)
         if self.verbose:
             print("The best threshold value is", self.prune_threshold)
 
-    def prune(self, root, X, Y):
+    def calculate_prune_loss(self, root, X, Y):
         """
-        prune a classification CART recursively
+        get the pruning loss of a classification CART recursively
         tag all the nodes with a float `pruned_loss`, which indicating the loss of pruning the branches under this node
         this node will be trimmed
 
@@ -51,12 +53,12 @@ class PrunedCART:
         other_Y = Y[other_ind]
 
         # trim the left node recursively
-        child_loss, child_size = self.prune(root.left, selected_X, selected_Y)
+        child_loss, child_size = self.calculate_prune_loss(root.left, selected_X, selected_Y)
         cur_loss += child_loss
         size += child_size
 
         # trim the right node recursively
-        child_loss, child_size = self.prune(root.right, other_X, other_Y)
+        child_loss, child_size = self.calculate_prune_loss(root.right, other_X, other_Y)
         cur_loss += child_loss
         size += child_size
 
