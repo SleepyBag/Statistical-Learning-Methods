@@ -57,7 +57,7 @@ class ClassificationCART:
                             best_gini, best_col, best_val = cur_gini, col, val
 
             # Build left and right child nodes recursively
-            if verbose:
+            if self.verbose:
                 print(f"Split by value {best_val} of {best_col}th column")
             selected_ind = X[:, best_col] == best_val
             other_ind = X[:, best_col] != best_val
