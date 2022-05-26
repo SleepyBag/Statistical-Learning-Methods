@@ -13,7 +13,7 @@ from ClassificationCART import ClassificationCART
 class PrunedCART:
     def __init__(self, cart, X, Y, val_X, val_Y, verbose=True):
         self.root = cart.root
-        self.possible_alpha = {0}
+        self.possible_alpha = {np.inf}
         self.verbose = verbose
         self.prune(self.root, X, Y)
         if self.verbose:
@@ -101,11 +101,11 @@ class PrunedCART:
         """
         best_acc = -1.
         best_alpha = 0.
-        for alpha in possible_alpha:
+        for alpha in sorted(list(possible_alpha)):
             cur_acc = self.validate(val_X, val_Y, alpha)
             if self.verbose:
                 print(f"When alpha = {alpha}, accuracy is {cur_acc}")
-            if cur_acc > best_acc:
+            if cur_acc >= best_acc:
                 best_acc = cur_acc
                 best_alpha = alpha
         return best_alpha
