@@ -66,7 +66,6 @@ class PrunedCART:
         # this node will be trimmed
         alpha = (pruned_loss - cur_loss) / (size - 1)
         root.alpha = alpha
-        # FIXME: why its length is always 1?
         self.possible_alpha.add(alpha)
         return cur_loss, size
 
@@ -98,8 +97,7 @@ class PrunedCART:
     def choose_alpha(self, val_X, val_Y, possible_alpha):
         """
         Choose the best subtree according to the validation set.
-        Original content of the book says that we should use cross-validation,
-        but doesn't say how to make it. I think it is a mistake.
+        Cross-validation here simply refers to predict on a pre-split validation set.
         """
         best_acc = -1.
         best_alpha = 0.
