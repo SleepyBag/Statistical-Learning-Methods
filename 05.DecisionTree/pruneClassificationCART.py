@@ -13,7 +13,7 @@ from ClassificationCART import ClassificationCART
 class PrunedCART:
     def __init__(self, cart, X, Y, val_X, val_Y, verbose=True):
         self.root = cart.root
-        self.possible_alpha = set()
+        self.possible_alpha = {np.inf}
         self.verbose = verbose
         self.prune(self.root, X, Y)
         if self.verbose:
