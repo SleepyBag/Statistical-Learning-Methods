@@ -44,7 +44,7 @@ class GMM:
             neg_log_likelihood = -torch.log(likelihood.sum(dim=0)).mean()
 
             if self.verbose:
-                if step % 100 == 0:
+                if step % 1000 == 0:
                     print('Step', step, ', negative log likelihood is', neg_log_likelihood)
 
             ##########################################
