@@ -2,10 +2,11 @@ import numpy as np
 from matplotlib import pyplot as plt
 
 class GMM:
-    def __init__(self, k, independent_variance=True, max_step=2000):
+    def __init__(self, k, independent_variance=True, max_step=2000, verbose=True):
         self.k = k
         self.max_step = max_step
         self.epsilon = 1e-8
+        self.verbose = verbose
         # specify whether each feature has independent variance - that is, has a diagnol covariance matrix
         self.independent_variance = independent_variance
 
@@ -31,6 +32,8 @@ class GMM:
             ##########################################
             # posterior probability of each sample in each Gaussian model
             posterior = self.predict(X)
+            if self.verbose():
+                print('Step', step, ', posterior probability of data is', posterior)
 
             ##########################################
             # Maximization step
