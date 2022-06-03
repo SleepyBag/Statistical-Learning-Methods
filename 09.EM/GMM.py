@@ -25,15 +25,13 @@ class GMM:
             self.cov = np.repeat(np.cov(X.T)[None, ...], self.k, axis=0)
             self.mean = np.random.multivariate_normal(X.mean(axis=0), self.cov[0], [self.k])
 
-        pre_likelihood = np.zeros([self.k, n])
+        previous_log_likelihood = -np.inf
         for step in range(self.max_step):
             ##########################################
             # Expectation step
             ##########################################
             # posterior probability of each sample in each Gaussian model
             posterior = self.predict(X)
-            if self.verbose():
-                print('Step', step, ', posterior probability of data is', posterior)
 
             ##########################################
             # Maximization step
@@ -60,34 +58,52 @@ class GMM:
             self.prior = posterior.sum(axis=1)
             self.prior /= (self.prior.sum() + self.epsilon)
 
-            if (self.likelihood - pre_likelihood).max() < self.epsilon:
+            log_likelihood = self.log_likelihood(X) 
+            if self.verbose:
+                print('After step', step, ', likelihood of model parameters is', np.exp(log_likelihood))
+            if log_likelihood - previous_log_likelihood < self.epsilon:
                 break
-            pre_likelihood = self.likelihood
+            previous_log_likelihood = log_likelihood
 
-    def predict(self, X):
-        """return the probability of each x belonging to each gaussian distribution"""
+    def pairwise_likelihood(self, X):
+        """
+        return the likelihood of each data piece in X belonging to each Gaussian cluster
+        """
         # dis[i, j, k] is the distance from i-th center to j-th sample, in k-th dimension
         dis = X[None, :, :] - self.mean[:, None, :]
 
         # calculate log likelihood first, then likelihood
         if self.independent_variance:
-            # log_likelihook is of shape [k, n, feature_size]
-            log_likelihood = -dis ** 2 * .5 / (self.std[:, None, :] ** 2 + self.epsilon) \
+            # data_log_likelihood is of shape [k, n, feature_size]
+            data_log_likelihood = -dis ** 2 * .5 / (self.std[:, None, :] ** 2 + self.epsilon) \
                 - np.log(np.sqrt(2 * np.pi) + self.epsilon) - np.log(self.std[:, None, :] + self.epsilon)
             # reduce likelihood to shape [k, n]
-            # log_likelihood[i, j] is the likelihood of j-th sample belonging to i-th center
-            log_likelihood = log_likelihood.sum(-1)
+            # data_log_likelihood[i, j] is the likelihood of j-th sample belonging to i-th center
+            data_log_likelihood = data_log_likelihood.sum(-1)
         else:
-            # log_likelihook is of shape [k, n]
-            # log_likelihood[i, j] is the likelihood of j-th sample belonging to i-th center
+            # data_log_likelihood is of shape [k, n]
+            # data_log_likelihood[i, j] is the likelihood of j-th sample belonging to i-th center
             fixed_cov = self.cov + self.epsilon * np.eye(self.feature_size)
-            log_likelihood = -.5 * (dis @ np.linalg.inv(fixed_cov) * dis).sum(axis=-1) \
+            data_log_likelihood = -.5 * (dis @ np.linalg.inv(fixed_cov) * dis).sum(axis=-1) \
                 -.5 * np.linalg.slogdet(2 * np.pi * fixed_cov)[1][:, None]                            # slogdet returns [sign, logdet], we just need logdet
 
-        likelihood = np.exp(log_likelihood)
-        self.likelihood = likelihood
+        data_likelihood = np.exp(data_log_likelihood)
         # the posterior of each datium belonging to a distribution, of shape [k, n]
-        posterior = self.prior[:, None] * likelihood
+        posterior = self.prior[:, None] * data_likelihood
+        return posterior
+
+    def log_likelihood(self, X):
+        """
+        return the likelihood of parameter given dataset X. 
+        It is exactly the posterior probability of X given current parametmer
+        """
+        posterior = self.pairwise_likelihood(X)
+        log_likelihood = np.log(posterior.sum(axis=0)).mean()
+        return log_likelihood
+
+    def predict(self, X):
+        """return the probability of each x belonging to each gaussian distribution"""
+        posterior = self.pairwise_likelihood(X)
         posterior /= (posterior.sum(axis=0, keepdims=True) + self.epsilon)
         return posterior
 
