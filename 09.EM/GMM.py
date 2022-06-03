@@ -58,6 +58,7 @@ class GMM:
             self.prior = posterior.sum(axis=1)
             self.prior /= (self.prior.sum() + self.epsilon)
 
+            # early stopping
             log_likelihood = self.log_likelihood(X) 
             if self.verbose:
                 print('After step', step, ', likelihood of model parameters is', np.exp(log_likelihood))

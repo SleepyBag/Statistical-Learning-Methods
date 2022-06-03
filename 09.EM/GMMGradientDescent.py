@@ -12,8 +12,6 @@ class GMMGradientDescent:
         self.verbose = verbose
         # specify whether each feature has independent variance - that is, has a diagnol covariance matrix
         self.independent_variance = independent_variance
-        if not independent_variance:
-            raise NotImplementedError("GMM with Gradient Descent is not implemented yet because of the difficulty of dealing with covariance matrix")
 
     def fit(self, X):
         """
@@ -31,16 +29,21 @@ class GMMGradientDescent:
             self.mean.normal_()
             self.mean.requires_grad_()
         else:
-            raise NotImplementedError("GMM with Gradient Descent is not implemented yet because of the difficulty of dealing with covariance matrix")
+            self.cholesky_inverse_cov = torch.linalg.cholesky(torch.cov(X.T)).repeat(self.k, 1, 1)
+            self.cholesky_inverse_cov.requires_grad_()
+            self.mean = torch.zeros(self.k, self.feature_size)
+            self.mean.normal_()
+            self.mean.requires_grad_()
         self.optimizer = torch.optim.Adam([self.log_std, self.mean, self.prior_logit], lr=self.learning_rate)
 
+        previous_log_likelihood = -np.inf
         for step in range(self.max_step):
             ##########################################
             # Calculate Likelihood
             ##########################################
             # posterior probability of each sample in each Gaussian model
             # it is exactly the likelihood of parameters including mean, std and prior
-            log_likelihood = self._log_likelihood(X)
+            log_likelihood = self.log_likelihood(X, return_tensor=True)
             neg_log_likelihood = -log_likelihood.mean()
 
             if self.verbose:
@@ -54,9 +57,20 @@ class GMMGradientDescent:
             neg_log_likelihood.backward()
             self.optimizer.step()
 
-    def _log_likelihood(self, X):
+            # early stopping
+            log_likelihood = self.log_likelihood(X) 
+            if self.verbose:
+                print('After step', step, ', likelihood of model parameters is', np.exp(log_likelihood))
+            if log_likelihood - previous_log_likelihood < self.epsilon:
+                break
+            previous_log_likelihood = log_likelihood
+
+    def log_likelihood(self, X, return_tensor=False):
         pairwise_likelihood = self.pairwise_likelihood(X)
-        return torch.log(pairwise_likelihood.sum(dim=0)).mean()
+        log_likelihood = torch.log(pairwise_likelihood.sum(dim=0)).mean()
+        if not return_tensor:
+            log_likelihood = log_likelihood.detach().numpy()
+        return log_likelihood
 
     def pairwise_likelihood(self, X):
         """return the likelihood of each x belonging to each gaussian distribution"""
@@ -74,9 +88,9 @@ class GMMGradientDescent:
         else:
             # log_likelihood is of shape [k, n]
             # data_log_likelihood[i, j] is the likelihood of j-th sample belonging to i-th center
-            fixed_cov = self.cov + self.epsilon * torch.eye(self.feature_size)
-            data_log_likelihood = -.5 * (dis @ torch.linalg.inv(fixed_cov) * dis).sum(axis=-1) \
-                -.5 * torch.linalg.slogdet(2 * torch.pi * fixed_cov)[1][:, None]                            # slogdet returns [sign, logdet], we just need logdet
+            inverse_cov = self.cholesky_inverse_cov @ self.cholesky_inverse_cov.T
+            data_log_likelihood = -.5 * (dis @ inverse_cov * dis).sum(axis=-1) \
+                +.5 * torch.linalg.slogdet(.5 / torch.pi * inverse_cov)[1][:, None]                            # slogdet returns [sign, logdet], we just need logdet
 
         likelihood = torch.exp(data_log_likelihood)
         # the posterior of each datium belonging to a distribution, of shape [k, n]
@@ -93,7 +107,7 @@ if __name__ == '__main__':
     import numpy as np
 
     def demonstrate(desc, X):
-        gmm = GMMGradientDescent(3, independent_variance=True)
+        gmm = GMMGradientDescent(3)
         gmm.fit(X)
         pred = gmm.predict(X).T
         plt.scatter(X[:, 0], X[:, 1], color=pred)
