@@ -36,14 +36,14 @@ class GMMGradientDescent:
             self.mean.requires_grad_()
         self.optimizer = torch.optim.Adam([self.log_std, self.mean, self.prior_logit], lr=self.learning_rate)
 
-        previous_log_likelihood = -np.inf
+        previous_log_likelihood = -math.inf
         for step in range(self.max_step):
             ##########################################
             # Calculate Likelihood
             ##########################################
             # posterior probability of each sample in each Gaussian model
             # it is exactly the likelihood of parameters including mean, std and prior
-            log_likelihood = self.log_likelihood(X, return_tensor=True)
+            log_likelihood = self.log_likelihood(X, input_tensor=True, return_tensor=True)
             neg_log_likelihood = -log_likelihood.mean()
 
             if self.verbose:
@@ -58,14 +58,16 @@ class GMMGradientDescent:
             self.optimizer.step()
 
             # early stopping
-            log_likelihood = self.log_likelihood(X) 
+            log_likelihood = self.log_likelihood(X, input_tensor=True) 
             if self.verbose:
                 print('After step', step, ', likelihood of model parameters is', np.exp(log_likelihood))
             if log_likelihood - previous_log_likelihood < self.epsilon:
                 break
             previous_log_likelihood = log_likelihood
 
-    def log_likelihood(self, X, return_tensor=False):
+    def log_likelihood(self, X, input_tensor=False, return_tensor=False):
+        if not input_tensor:
+            X = torch.Tensor(X)
         pairwise_likelihood = self.pairwise_likelihood(X)
         log_likelihood = torch.log(pairwise_likelihood.sum(dim=0)).mean()
         if not return_tensor:
